@@ -77,7 +77,6 @@ function M.hasWindowsOpen(lookInAllTabs)
 end
 
 function M.getOpenBufferNumberByName(fileName, lookInAllTabs)
-  print(fileName)
   return doInTabs(function (tab)
     local tabBuffers = vim.fn.tabpagebuflist(tab.tabnr)
     for _, bufN in ipairs(tabBuffers) do
@@ -121,9 +120,9 @@ function M.goToBuffer(bufN, opts)
   if type (trySwitch) ~= 'boolean' then trySwitch = true end
   if type (useExistingWin) ~= 'boolean' then useExistingWin = true end
   if type (onOpenMode) ~= 'string' then onOpenMode = 'ask' end
+
   -- Try switch to existing window in which bufN might be already loaded...
   if trySwitch then
-
     local bufWin = next(vim.fn.win_findbuf(bufN))
     -- Buffer is loaded in 'some' window, locate it and switch
     if bufWin ~= nil then

@@ -73,15 +73,30 @@ Plug 'akinsho/toggleterm.nvim', {'tag' : 'v2.*'}                     " Terminals
 Plug 'rmagatti/goto-preview'                                         " LSP integration for floating definitions
 call plug#end()
 
-noremap <leader>wb <c-w><c-p> " --> Go back to prev window
+" Go back to prev window
+noremap <leader>wb <c-w><c-p>
+" Close window
+noremap <leader>wcc :close<CR>
+" Off highlight search
 nnoremap <leader><space> :nohlsearch<CR>
 
 " Insert lines without going into insert mode
 nnoremap <Leader>o o<Esc>
 nnoremap <Leader>O O<Esc>
 
+" Window nav
+nnoremap <S-Right> <C-w>l
+nnoremap <S-Left> <C-w>h
+nnoremap <S-Up> <C-w>k
+nnoremap <S-Down> <C-w>j
+
+nnoremap gpd <cmd>lua require('goto-preview').goto_preview_definition()<CR>
+nnoremap gpi <cmd>lua require('goto-preview').goto_preview_implementation()<CR>
+nnoremap gpr <cmd>lua require('goto-preview').goto_preview_references()<CR>
+
 lua << EOF
 local util = require'util'
+
 
 require'onedarkpro'.setup {}
 vim.o.background = 'dark'
@@ -93,11 +108,29 @@ vim.keymap.set('n', '<leader>bd', function ()
   require'bufdelete'.bufdelete(bufnr)
 end)
 
--- Switch to buffer by number
+-- Switch to buffer by number, try locate open buffer first
 vim.keymap.set('n', '<leader>bs', function ()
   local bufnr = vim.v.count
   if bufnr then
     util.goToBuffer(bufnr)
+  end
+end)
+
+-- Switch to buffer by number, pick window to open
+vim.keymap.set('n', '<leader>bo', function ()
+  local bufnr = vim.v.count
+  if bufnr then
+    util.goToBuffer(bufnr, { trySwitch = false })
+  end
+end)
+
+-- Delete all non-in-window buffers
+vim.keymap.set('n', '<leader>bclean', function ()
+  local bufrs = vim.fn.getbufinfo({ bufloaded = 1, buflisted = 1 })
+  for _, buf in pairs(bufrs) do
+    if buf.hidden == 1 then
+      vim.cmd(string.format('%sbd', buf.bufnr))
+    end
   end
 end)
 
@@ -113,7 +146,38 @@ vim.keymap.set('n', '<C-n>', function()
   end
 end)
 
--- Switch to command mode when changing windows
+-- Register floating window mappings
+vim.api.nvim_create_autocmd({ "BufEnter" }, {
+  callback = function()
+    local api = vim.api
+
+    local winId = api.nvim_get_current_win()
+    local winConfig = api.nvim_win_get_config(winId)
+
+    if winConfig.relative ~= '' then
+      local bufnr = api.nvim_win_get_buf(winId)
+
+      if bufnr then
+        vim.keymap.set('n', '<leader>woo', function()
+          util.goToBuffer(bufnr, { trySwitch = false, useExistingWindow = true })
+          api.nvim_win_close(winId, false)
+        end, { noremap = true, buffer = bufnr })
+
+        vim.keymap.set('n', '<leader>wov', function()
+          util.goToBuffer(bufnr, { trySwitch = false, useExistingWindow = false, onOpenMode = 'vertical' })
+          api.nvim_win_close(winId, false)
+        end, { noremap = true, buffer = bufnr })
+
+        vim.keymap.set('n', '<leader>wox', function()
+          util.goToBuffer(bufnr, { trySwitch = false, useExistingWindow = false, onOpenMode = 'horizontal' })
+          api.nvim_win_close(winId, false)
+        end, { noremap = true, buffer = bufnr })
+      end
+    end
+  end
+})
+
+--Switch to command mode when changing windows
 vim.api.nvim_create_autocmd({ "WinEnter" }, {
   callback = function()
     vim.cmd('stopinsert')
@@ -166,13 +230,11 @@ require'bqf'.setup{}
 
 require'toggleterm'.setup {}
 
-require('goto-preview').setup {
-  default_mappings = true
-}
+require('goto-preview').setup {}
 
+-- Terminal-specific mappings
 function _G.set_terminal_keymaps()
-  local opts = { noremap = true }
-  vim.api.nvim_buf_set_keymap(0, 't', '<esc>', [[<C-\><C-n>]], opts)
+  vim.api.nvim_buf_set_keymap(0, 't', '<esc>', [[<C-\><C-n>]], { noremap = true })
 end
 
 vim.cmd('autocmd! TermOpen term://* lua set_terminal_keymaps()')
@@ -226,8 +288,7 @@ require 'window-picker'.setup {
 require("indent_blankline").setup {
     show_current_context = true,
     show_current_context_start = true,
-    use_treesitter = true,
-    --show_first_indent_level = false
+    use_treesitter = true
 }
 
 require'nvim-tree'.setup {
@@ -290,48 +351,52 @@ local customActions = setmetatable({}, {
 })
 
 -- Default select: Go to exisint buffer/window if any, or prompt select available window
-customActions.default_select = function(promptBufn)
-  local state = require'telescope.actions.state'
-  local entry = state.get_selected_entry()
+local function makeSelect(trySwitch)
+  return function(promptBufn)
+    local state = require'telescope.actions.state'
+    local entry = state.get_selected_entry()
 
-  local bufnr = entry.bufnr
-  local filename = entry.path or entry.filename
+    local bufnr = entry.bufnr
+    local filename = entry.path or entry.filename
 
-  if entry.bufnr or filename then
-    actions.close(promptBufn)
-  end
+    if entry.bufnr or filename then
+      actions.close(promptBufn)
+    end
 
-  if bufnr then
-    util.goToBuffer(bufnr)
-  elseif filename then
-    -- if it's open in any window --> Go there
-    -- else if winCount > 1 --> Pick window
-    -- else --> :e file
+    if bufnr then
+      util.goToBuffer(bufnr, { trySwitch = trySwitch })
+    elseif filename then
+      -- if it's open in any window --> Go there
+      -- else if winCount > 1 --> Pick window
+      -- else --> :e file
 
-    bufnr = util.getOpenBufferNumberByName(filename, true)
+      bufnr = util.getOpenBufferNumberByName(filename, true)
 
-    if bufnr ~= nil then
-      util.goToBuffer(bufnr)
-    elseif util.hasWindowsOpen(false) then
-      local targetWinId = require'window-picker'.pick_window()
-      if targetWinId ~= nil then
-        local targetWinnr = vim.fn.getwininfo(targetWinId)[1].winnr
-        vim.cmd(string.format('%swincmd w', targetWinnr))
+      if bufnr ~= nil then
+        util.goToBuffer(bufnr, { trySwitch = trySwitch })
+      elseif util.hasWindowsOpen(false) then
+        local targetWinId = require'window-picker'.pick_window()
+        if targetWinId ~= nil then
+          local targetWinnr = vim.fn.getwininfo(targetWinId)[1].winnr
+          vim.cmd(string.format('%swincmd w', targetWinnr))
+          vim.cmd(string.format('e %s', filename))
+        end
+      else
         vim.cmd(string.format('e %s', filename))
       end
     else
-      vim.cmd(string.format('e %s', filename))
+      print('No file/bufnumber selected!')
+      return
     end
-  else
-    print('No file/bufnumber selected!')
-    return
-  end
 
-  if entry.lnum and entry.col then
-    vim.api.nvim_win_set_cursor(0, { entry.lnum, entry.col })
+    if entry.lnum and entry.col then
+      vim.api.nvim_win_set_cursor(0, { entry.lnum, entry.col })
+    end
   end
 end
 
+customActions.default_select = makeSelect(true)
+customActions.select_window = makeSelect(false)
 customActions = transform_mod(customActions)
 
 telescope.setup{
@@ -347,6 +412,7 @@ telescope.setup{
       mappings = {
         i = {
           ["<cr>"] = customActions.default_select,
+          ["<S-cr>"] = customActions.select_window
         }
       }
     },
@@ -354,6 +420,7 @@ telescope.setup{
       mappings = {
         i = {
           ["<cr>"] = customActions.default_select,
+          ["<S-cr>"] = customActions.select_window
         }
       }
     },
@@ -361,6 +428,7 @@ telescope.setup{
       mappings = {
         i = {
           ["<cr>"] = customActions.default_select,
+          ["<S-cr>"] = customActions.select_window
         }
       }
     }
@@ -379,7 +447,8 @@ vim.keymap.set('n', '<leader>fg', function ()
   telescope.extensions.live_grep_args.live_grep_args({ 
     mappings = {
       i = {
-        ['<cr>'] = customActions.default_select
+        ['<cr>'] = customActions.default_select,
+        ["<S-cr>"] = customActions.select_window
       }
     }
   })

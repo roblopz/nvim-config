@@ -9,7 +9,12 @@ function M.makeMappings(fn, crOpen)
   local res = {
     ["<C-s>"] = winThere.map_telescope(fn, 'pick'),
     ["<C-v>"] = winThere.map_telescope(fn, 'vsplit'),
-    ["<C-x>"] = winThere.map_telescope(fn, 'hsplit')
+    ["<C-x>"] = winThere.map_telescope(fn, 'hsplit'),
+    ["<C-q>"] = function (prompt_bufnr)
+      vim.cmd('cexpr []')
+      actions.add_selected_to_qflist(prompt_bufnr)
+      vim.cmd('copen')
+    end
   }
 
   if crOpen then

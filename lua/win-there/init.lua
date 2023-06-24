@@ -69,7 +69,7 @@ local function open_window_with_picker(bufInfo)
       vim.cmd(string.format("e %s", bufInfo.fPath))
     end
 
-    return true
+    return true 
   end
 
   return false
@@ -342,59 +342,6 @@ function M.map_telescope(fn, mode)
         })
       end
     end
-  end
-end
-
-function M.setup(opts)
-  opts = vim.tbl_deep_extend("force", defaultSetupOpts, opts or {}) or defaultSetupOpts
-
-  M.excludeWinFileTypes = opts.excludeWinFileTypes
-
-  if opts.quickfix.enable then
-    setup_quickfix(opts.quickfix);
-  end
-
-  if opts.setup_commands then
-    vim.api.nvim_create_user_command("WinThere", function(argOpts)
-      local parsedOpts = {}
-      local openOpts = {}
-
-      for _, arg in ipairs(argOpts.fargs) do
-        if arg:find("=") == nil then
-          parsedOpts[arg] = true
-        else
-          local param = vim.split(arg, "=")
-          local key = table.remove(param, 1)
-          param = table.concat(param, "=")
-          parsedOpts[key] = param
-        end
-      end
-
-      local mode = parsedOpts.mode
-      local winLayput = util.get_win_layout_info({ lookInAllTabs = false, excludeTypes = M.excludeWinFileTypes })
-      if #winLayput.windows > 1 then
-        openOpts.modes = util.coalesce(mode ~= nil, { mode }, nil)
-      else
-        openOpts.modes = util.coalesce(mode == 'vsplit' or mode == 'hsplit', { mode }, nil)
-      end
-
-      if openOpts.modes and openOpts.modes[1] == "menu" then
-        openOpts.modes = nil
-      end
-
-      if parsedOpts.stay == "true" or parsedOpts.stay == true then openOpts.stay = true end
-
-      if parsedOpts.title then
-        local title = string.match(argOpts.args, [[title="([^"]+)]])
-        if title then
-          openOpts.prompt_title = title
-        else
-          openOpts.prompt_title = parsedOpts.title
-        end
-      end
-
-      M.open(vim.fn.bufnr(), openOpts)
-    end, { bang = true, desc = "Open window <there>", nargs = "*" })
   end
 end
 

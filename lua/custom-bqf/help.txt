@@ -1,0 +1,46 @@
+require 'bqf'.setup {
+  func_map = {
+    -- open
+    open = "<CR>",
+    -- open in tab
+    tab = "t",
+    -- open the item in a new tab, but stay at quickfix window
+    tabb = "T",
+    -- open the item in a new tab, and close quickfix window
+    tabc = "<C-t>",
+    -- open the item in horz split
+    split = "<C-x>",
+    -- open the item in vert split
+    vsplit = "<C-v>",
+    -- go to previous file under the cursor in quickfix window
+    prevfile = "<C-k>",
+    -- go to next file under the cursor in quickfix window
+    nextfile = "<C-j>",
+    -- go to previous quickfix list in quickfix window
+    prevhist = "<",
+    -- go to next quickfix list in quickfix window
+    nexthist = ">",
+    -- toggle sign and move cursor up
+    stoggleup = "<S-Tab>",
+    -- toggle sign and move cursor down
+    stoggledown = "<Tab>",
+    -- scroll up half-page in preview window
+    pscrollup = "<C-U>",
+    -- scroll down half-page in preview window
+    pscrolldown = "<C-D>",
+    -- scroll back to original position in preview window
+    pscrollorig = "zo",
+    -- toggle preview window between normal and max size
+    ptogglemode = "zp",
+    -- toggle preview for an item of quickfix list
+    ptoggleitem = "p",
+    -- toggle auto preview when cursor moved
+    ptoggleauto = "P",
+    -- create new list for signed items
+    filter = "zn",
+    -- create new list for non-signed items
+    filterr = "zN",
+    -- Last leave
+    lastleave = "zl"
+  }
+}

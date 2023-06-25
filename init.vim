@@ -57,6 +57,9 @@ call plug#begin()
     Plug 'lukas-reineke/indent-blankline.nvim'                  " Indentation
     Plug 'RRethy/vim-illuminate'                                " Highlight references
     Plug 'karb94/neoscroll.nvim'                                " Scroll animate
+    Plug 'brenoprata10/nvim-highlight-colors'                   " Highlight hex
+    Plug 'kylechui/nvim-surround'                               " Surround
+    Plug 'windwp/nvim-ts-autotag'                               " Close autotags
     " LSP & Related
     Plug 'williamboman/mason.nvim', { 'do': ':MasonUpdate' }    " Lsp server package manager
     Plug 'williamboman/mason-lspconfig.nvim'                    " Lsp server package manager
@@ -80,13 +83,9 @@ call plug#begin()
     Plug 'rmagatti/goto-preview'                                " Better than sagas gotoLsp
   call plug#end()
 
-" colorscheme kanagawa-wave
-
-" Affects lualine winbar status on diagnostics
-:highlight CustomDiagnosticError guifg=#FD6900 guibg=#263238
-:highlight CustomDiagnosticWarn guifg=#FDFA00 guibg=#263238
-:highlight CustomDiagnosticInfo guifg=#00D5CA guibg=#263238
-:highlight CustomDiagnosticHint guifg=#00D597 guibg=#263238
+" Avoid jumping next on highlight
+nnoremap <silent> * :let @/= '\<' . expand('<cword>') . '\>' <bar> set hls <cr>
+nnoremap <silent> g* :let @/=expand('<cword>') <bar> set hls <cr>
 
 autocmd User TelescopePreviewerLoaded setlocal nonumber
 

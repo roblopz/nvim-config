@@ -134,11 +134,6 @@ M.init = function()
 
   require 'custom-telescope'.setup()
 
-  vim.fn.sign_define("DiagnosticSignError", { text = "", texthl = "CustomDiagnosticError" })
-  vim.fn.sign_define("DiagnosticsSigWarning", { text = "", texthl = "CustomDiagnosticWarn" })
-  vim.fn.sign_define("DiagnosticsSigInformation", { text = "", texthl = "CustomDiagnosticInfo" })
-  vim.fn.sign_define("DiagnosticSignHint", { text = "", texthl = "CustomDiagnosticHint" })
-
   require('kanagawa').setup({
     transparent = true,
     terminalColors = true,
@@ -160,10 +155,31 @@ M.init = function()
         MasonNormal = { bg = theme.ui.bg_m3, fg = theme.ui.fg_dim },
       }
     end,
-
+    colors = {
+      theme = {
+        all = {
+          ui = {
+            bg_gutter = "none"
+          }
+        }
+      }
+    }
   })
 
   vim.cmd("colorscheme kanagawa-wave");
+  local palette_colors = require("kanagawa.colors").setup().palette
+
+  vim.cmd('hi Visual guibg=#314768')
+
+  vim.cmd(string.format("hi DiagnosticError guifg=%s", palette_colors.peachRed))
+  vim.cmd(string.format("hi DiagnosticWarn guifg=%s", palette_colors.carpYellow))
+  vim.cmd(string.format("hi DiagnosticInfo guifg=%s", palette_colors.waveAqua2))
+  vim.cmd(string.format("hi DiagnosticHint guifg=%s", palette_colors.autumnGreen))
+
+  vim.fn.sign_define("DiagnosticSignError", { text = "E", texthl = "DiagnosticError" })
+  vim.fn.sign_define("DiagnosticsSigWarning", { text = "W", texthl = "DiagnosticWarn" })
+  vim.fn.sign_define("DiagnosticsSigInformation", { text = "I ", texthl = "DiagnosticInfo" })
+  vim.fn.sign_define("DiagnosticSignHint", { text = "H", texthl = "DiagnosticHint" })
 
   require("neo-tree").setup({
     enable_git_status = false,
@@ -198,16 +214,16 @@ M.init = function()
       },
       diagnostics = {
         symbols = {
-          hint = "",
-          info = "",
-          warn = "",
-          error = "",
+          error = "",
+          warn = "",
+          info = " ",
+          hint = "",
         },
         highlights = {
-          hint = "CustomDiagnosticHint",
-          info = "CustomDiagnosticInfo",
-          warn = "CustomDiagnosticWarn",
-          error = "CustomDiagnosticError",
+          error = "DiagnosticError",
+          hint  = "DiagnosticHint",
+          info  = "DiagnosticInfo",
+          warn  = "DiagnosticWarn",
         },
       },
     },
@@ -309,57 +325,7 @@ M.init = function()
     }
   })
 
-  local diagnostic_config =
-  {
-    'diagnostics',
-    diagnostics_color = {
-      error = 'CustomDiagnosticError',
-      warn  = 'CustomDiagnosticWarn',
-      info  = 'CustomDiagnosticInfo',
-      hint  = 'CustomDiagnosticHint',
-    },
-  }
-
-
-  require 'lualine'.setup {
-    options = {
-      theme = 'material',
-      globalstatus = true
-    },
-    extensions = { 'neo-tree', 'quickfix', 'nvim-dap-ui', 'toggleterm' },
-    sections = {
-      lualine_a = { 'mode' },
-      lualine_b = { diagnostic_config },
-      lualine_c = { 'branch', { 'filename', path = 3 } },
-      lualine_x = { 'filetype' },
-      lualine_y = { 'progress' },
-      lualine_z = { 'location' }
-    },
-    winbar = {
-      lualine_a = {},
-      lualine_b = { { 'filename', path = 1 } },
-      lualine_c = {},
-      lualine_x = {},
-      lualine_y = {},
-      lualine_z = { diagnostic_config },
-    },
-    inactive_winbar = {
-      lualine_a = {},
-      lualine_b = {},
-      lualine_c = { { 'filename', path = 1 } },
-      lualine_x = {},
-      lualine_y = {},
-      lualine_z = { diagnostic_config }
-    },
-    tabline = {
-      lualine_a = { 'buffers' },
-      lualine_b = {},
-      lualine_c = {},
-      lualine_x = {},
-      lualine_y = {},
-      lualine_z = { 'tabs' }
-    }
-  }
+  require 'custom-lualine'.setup()
 
   require 'window-picker'.setup {
     include_current_win = true,
@@ -387,7 +353,7 @@ M.init = function()
     highlight = {
       on_put = true,
       on_yank = true,
-      timer = 350,
+      timer = 400,
     },
     preserve_cursor_position = { enabled = true }
   }
@@ -397,7 +363,7 @@ M.init = function()
     yank_substituted_text = false,
     highlight_substituted_text = {
       enabled = true,
-      timer = 350,
+      timer = 400,
     },
     range = {
       prefix = "s",
@@ -438,7 +404,9 @@ M.init = function()
 
   require 'custom-bqf'.setup()
 
-  require 'nvim-autopairs'.setup {}
+  require 'nvim-autopairs'.setup {
+    check_ts = true
+  }
 
   local animate = require 'mini.animate'
   animate.setup({
@@ -495,8 +463,15 @@ M.init = function()
   require 'custom-lsp'.setup()
 
   require 'nvim-treesitter.configs'.setup({
-    highlight = { enable = true },
-    indent = { enable = true },
+    highlight = {
+      enable = true,
+    },
+    indent = {
+      enable = true
+    },
+    autotag = {
+      enable = true,
+    },
     context_commentstring = { enable = true, enable_autocmd = false },
     incremental_selection = {
       enable = true,
@@ -541,6 +516,8 @@ M.init = function()
   }
 
   require 'custom-goto-preview'.setup()
+
+  require("nvim-surround").setup()
 
   vim.api.nvim_create_user_command("ESLintFix", function()
     local uv = vim.loop

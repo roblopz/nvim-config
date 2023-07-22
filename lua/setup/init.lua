@@ -18,11 +18,23 @@ M.init = function()
   vim.keymap.set("n", "S", require('substitute').eol, { noremap = true })
   vim.keymap.set("x", "s", require('substitute').visual, { noremap = true })
 
+  -- Folding
+  vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
+  vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
+  vim.keymap.set('n', 'zr', require('ufo').openFoldsExceptKinds)
+  vim.keymap.set('n', 'zm', require('ufo').closeFoldsWith)
+  vim.keymap.set('n', 'zp', require('ufo').peekFoldedLinesUnderCursor)
+
+  -- Leap
+  vim.keymap.set('n', '<leader>s', '<Plug>(leap-forward-to)')
+  vim.keymap.set('n', '<leader>S', '<Plug>(leap-backward-to)')
+  vim.keymap.set('n', '<leader>x', '<Plug>(leap-forward-till)')
+  vim.keymap.set('n', '<leader>X', '<Plug>(leap-backward-till)')
+
   local wk = require 'which-key'
 
   -- Windows & Quickfix
   wk.register({
-    ["<leader>wo"] = { "<Cmd>lua require'win-there'.open(vim.fn.getbufinfo()[1].bufnr)<CR>", "Open current window at..." },
     ["<leader>qf"] = {
       f = { "<Cmd>copen<CR>", "Focus quickfix window" },
       c = { "<Cmd>cclose<CR>", "Close quickfix window" }
@@ -45,6 +57,10 @@ M.init = function()
     },
     ["<S-Up>"] = { "<S-v><Up>", "Enter l-visual up" },
     ["<S-Down>"] = { "<S-v><Down>", "Enter l-visual down" },
+    ["[b"] = { "<cmd>bprevious<cr>", "Prev buffer" },
+    ["]b"] = { "<cmd>bnext<cr>", "Next buffer" },
+    ["<leader>i"] = { "<Cmd>lua require'mini.indentscope'.draw()<CR>", "Set context indent line", mode = "n" },
+    ["<leader>I"] = { "<Cmd>lua require'mini.indentscope'.undraw()<CR>", "Unset context indent line", mode = "n" }
   })
 
   -- Telescope and vim.select
@@ -59,6 +75,7 @@ M.init = function()
     y = { "<Cmd>YankyRingHistory<CR>", "Prompt yank ring" }
   }, { prefix = "<leader>f" })
 
+  -- Neo-tree
   wk.register({
     ["t"] = { "<Cmd>lua require'neo-tree.command'.execute({ toggle = true, position = 'left' })<CR>", "Toggle Tree" },
     ["f"] = { "<Cmd>lua require'neo-tree.command'.execute({ reveal = true, position = 'left' })<CR>", "Focus File" },
@@ -113,11 +130,12 @@ M.init = function()
   wk.register({
     ["gd"] = {
       name = "Definition",
-      g = { "<Cmd>lua vim.lsp.buf.type_definition()<CR>", "Go to type definition" },
-      p = { "<Cmd>lua require('goto-preview').goto_preview_type_definition()<CR>", "Preview type definition" },
-      v = { "<Cmd>lua require('custom-lsp.keymaps').go_to_definition({ mode = 'vsplit' })<CR>", "Win-Open vsplit" },
+      g = { "<Cmd>lua vim.lsp.buf.definition()<CR>", "Go to definition" },
+      p = { "<Cmd>lua require('goto-preview').goto_preview_definition()<CR>", "Preview definition" },
+      x = { "<Cmd>lua require('custom-lsp.keymaps').go_to_definition({ mode = 'split', horizontal = true })<CR>",
+        "Win-Open hsplit" },
+      v = { "<Cmd>lua require('custom-lsp.keymaps').go_to_definition({ mode = 'split' })<CR>", "Win-Open vsplit" },
       s = { "<Cmd>lua require('custom-lsp.keymaps').go_to_definition({ mode = 'pick' })<CR>", "Win-Open pick" },
-      x = { "<Cmd>lua require('custom-lsp.keymaps').go_to_definition({ mode = 'hsplit' })<CR>", "Win-Open hsplit" }
     },
     ["gr"] = {
       p = { "<Cmd>lua require('goto-preview').goto_preview_references()<CR>", "Preview references" },
@@ -334,7 +352,7 @@ M.init = function()
     other_win_hl_color = '#54aeeb',
     filter_rules = {
       bo = {
-        filetype = require 'win-there'.excludeWinFileTypes,
+        filetype = require 'open-window'.excludeWinFileTypes,
         buftype = { 'terminal' }
       }
     }
@@ -437,24 +455,9 @@ M.init = function()
     cursor_scrolls_alone = true, -- The cursor will keep on scrolling even if the window cannot scroll further
   }
 
-  require 'indent_blankline'.setup({
-    char = "│",
-    filetype_exclude = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
-    show_trailing_blankline_indent = false,
-    show_current_context = false,
-  })
-
-  local miniIndentScope = require 'mini.indentscope'
-  require 'mini.indentscope'.setup({
-    symbol = "│",
-    draw = {
-      delay = 100,
-      animation = miniIndentScope.gen_animation.none()
-    },
-    options = { try_as_border = true },
-  })
-
   require 'custom-illuminate'.setup()
+
+  require 'custom-indent'.setup()
 
   require("mason").setup()
 
@@ -517,14 +520,66 @@ M.init = function()
 
   require 'custom-goto-preview'.setup()
 
-  require("nvim-surround").setup()
+  require 'nvim-surround'.setup()
 
+  require 'leap'.setup {}
+
+  vim.cmd('hi LeapLabelPrimary guifg=#16161D guibg=#D27E99')
+  vim.cmd('hi LeapLabelSecondary guifg=#16161D guibg=#D27E99')
+
+  vim.o.foldcolumn = '0'
+  vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
+  vim.o.foldlevelstart = 99
+  vim.o.foldenable = true
+
+  require 'ufo'.setup {
+    preview = {
+      win_config = {
+        winblend = 0
+      }
+    },
+    fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate)
+      local newVirtText = {}
+      local suffix = ('  %d '):format(endLnum - lnum)
+      local sufWidth = vim.fn.strdisplaywidth(suffix)
+      local targetWidth = width - sufWidth
+      local curWidth = 0
+      for _, chunk in ipairs(virtText) do
+        local chunkText = chunk[1]
+        local chunkWidth = vim.fn.strdisplaywidth(chunkText)
+        if targetWidth > curWidth + chunkWidth then
+          table.insert(newVirtText, chunk)
+        else
+          chunkText = truncate(chunkText, targetWidth - curWidth)
+          local hlGroup = chunk[2]
+          table.insert(newVirtText, { chunkText, hlGroup })
+          chunkWidth = vim.fn.strdisplaywidth(chunkText)
+          -- str width returned from truncate() may less than 2nd argument, need padding
+          if curWidth + chunkWidth < targetWidth then
+            suffix = suffix .. (' '):rep(targetWidth - curWidth - chunkWidth)
+          end
+          break
+        end
+        curWidth = curWidth + chunkWidth
+      end
+      table.insert(newVirtText, { suffix, 'MoreMsg' })
+      return newVirtText
+    end
+
+  }
+
+  local alpha_theme = require 'alpha.themes.startify'.config
+  table.remove(alpha_theme.layout, 2) -- Remove header
+  require 'alpha'.setup(alpha_theme)
+
+  -- Run eslint fix
   vim.api.nvim_create_user_command("ESLintFix", function()
     local uv = vim.loop
     local stdout = assert(uv.new_pipe(false), "Must be able to create pipe")
     local stderr = assert(uv.new_pipe(false), "Must be able to create pipe")
 
     vim.cmd("silent w")
+
     handle, pid_or_err = uv.spawn('npx', {
       args = { 'eslint_d', '--fix', string.format("%s", vim.fn.expand('%')) },
       stdio = { nil, stdout, stderr },
@@ -561,6 +616,32 @@ M.init = function()
       end
     end
   end, { bang = true, desc = "Close hidden buffers" })
+
+  -- Open current window in another window
+  vim.api.nvim_create_user_command("OpenInWindow", function()
+    require 'open-window'.open_menu()
+  end, { bang = true, desc = "Open current buffer in another window" })
+
+  -- Toggle explorer on enter
+  vim.api.nvim_create_autocmd({ 'VimEnter' }, {
+    callback = function()
+      vim.fn.timer_start(1, function()
+        vim.cmd('Neotree show')
+      end)
+    end
+  })
+
+  -- go to last loc when opening a buffer
+  vim.api.nvim_create_autocmd("BufReadPost", {
+    group = vim.api.nvim_create_augroup("last_loc", { clear = true }),
+    callback = function()
+      local mark = vim.api.nvim_buf_get_mark(0, '"')
+      local lcount = vim.api.nvim_buf_line_count(0)
+      if mark[1] > 0 and mark[1] <= lcount then
+        pcall(vim.api.nvim_win_set_cursor, 0, mark)
+      end
+    end,
+  })
 end
 
 return M

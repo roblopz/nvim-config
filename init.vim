@@ -51,15 +51,23 @@ call plug#begin()
     Plug 'gbprod/substitute.nvim'                               " s-key substitutions
     Plug 'kevinhwang91/nvim-bqf'                                " Quickfix window popup and uitl
     Plug 'stevearc/dressing.nvim'                               " Extensions for UI in input's and select's 
+    Plug 'goolord/alpha-nvim'                                   " Starter
     Plug 'windwp/nvim-autopairs'                                " Autopairs
     Plug 'echasnovski/mini.animate'                             " Animage cursor
     Plug 'echasnovski/mini.indentscope'                         " More indentation
     Plug 'lukas-reineke/indent-blankline.nvim'                  " Indentation
+    Plug 'shellRaining/hlchunk.nvim'                            " Indentation
     Plug 'RRethy/vim-illuminate'                                " Highlight references
     Plug 'karb94/neoscroll.nvim'                                " Scroll animate
     Plug 'brenoprata10/nvim-highlight-colors'                   " Highlight hex
     Plug 'kylechui/nvim-surround'                               " Surround
     Plug 'windwp/nvim-ts-autotag'                               " Close autotags
+    Plug 'nvim-pack/nvim-spectre'                               " Search in project
+    Plug 'sindrets/diffview.nvim'                               " Gitdiff
+    Plug 'kevinhwang91/promise-async'                           " Required for folds
+    Plug 'kevinhwang91/nvim-ufo'                                " Folds
+    Plug 'ggandor/leap.nvim'                                    " Jump to locations
+    Plug 'rcarriga/nvim-notify'                                 " Fancy notifications
     " LSP & Related
     Plug 'williamboman/mason.nvim', { 'do': ':MasonUpdate' }    " Lsp server package manager
     Plug 'williamboman/mason-lspconfig.nvim'                    " Lsp server package manager

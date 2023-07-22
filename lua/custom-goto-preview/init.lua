@@ -14,23 +14,24 @@ local function minimize_win(winid)
   end
 end
 
-local function set_win_there(keymap, modes, bufnr, winid)
+local function set_open_win_maps(bufnr, winid, keymap, open_win_opts)
   vim.keymap.set(
     'n',
     keymap,
     function()
       local restore_win = minimize_win(winid)
 
-      require 'win-there'.open(bufnr, {
-        modes = modes,
-        callback = function(opened)
-          if opened then
+      open_win_opts.cb = function (res)
+        if (res.opened) then
             vim.api.nvim_win_close(winid, true)
-          else
+        else
             restore_win()
-          end
         end
-      })
+      end
+
+      open_win_opts.on_open_set_cursor = vim.api.nvim_win_get_cursor(winid)
+
+      require 'open-window'.open(bufnr, open_win_opts)
     end,
     { buffer = bufnr }
   )
@@ -65,16 +66,15 @@ function M.setup()
         end
       })
 
-      -- print(string.format('event fired: %s', vim.inspect(autores)))
-      set_win_there('<c-v>', { 'vsplit' }, bufnr, winid)
-      set_win_there('<c-x>', { 'hsplit' }, bufnr, winid)
-      set_win_there('<c-s>', { 'pick' }, bufnr, winid)
-      set_win_there('<c-o>', { 'open' }, bufnr, winid)
+      set_open_win_maps(bufnr, winid, '<c-v>', { mode = "split" })
+      set_open_win_maps(bufnr, winid, '<c-x>', { mode = "split", horizontal = true })
+      set_open_win_maps(bufnr, winid, '<c-s>', { mode = "pick" })
+      -- set_open_win_maps(bufnr, winid, '<c-o>', { 'open' }, bufnr, winid)
     end,
     references = {
       telescope = require 'telescope.themes'.get_dropdown({
         results_title = "References",
-        winblend = 10,
+        winblend = 0,
         layout_strategy = "horizontal",
         show_line = false,
         layout_config = {
@@ -91,11 +91,10 @@ function M.setup()
           prompt_position = "bottom"
         },
         attach_mappings = function(_, map)
-          local mappings = require 'custom-telescope'.makeMappings(
-            function(opts)
-              require('goto-preview').goto_preview_references(opts)
-            end,
-            true
+          local mappings = require 'custom-telescope'.make_win_mappings(
+            function(reopen_prompt_args)
+              require('goto-preview').goto_preview_references(reopen_prompt_args)
+            end
           )
 
           for mapKey, mapFn in pairs(mappings) do

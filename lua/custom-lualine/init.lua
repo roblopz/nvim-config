@@ -5,6 +5,11 @@ local function makeHighlight(name, fg, bg)
   return name
 end
 
+local function filename_and_parent(bufnr)
+  local fname = vim.api.nvim_buf_get_name(bufnr)
+  return vim.fn.fnamemodify(' xx ' .. fname, ':p:h:t') .. '/' .. vim.fn.fnamemodify(fname, ':t')
+end
+
 M.setup = function()
   local colors = {
     graybg         = '#606060',
@@ -67,6 +72,12 @@ M.setup = function()
   local diagnostic_inactive_info_hl = makeHighlight("Status_Diagnostic_Inactive_Info", palette_colors.waveAqua2, "None")
   local diagnostic_inactive_hint_hl = makeHighlight("Status_Diagnostic_Inactive_Hint", colors.autumnGreen, "None")
 
+  -- local function buffer_fmt(str, ctx)
+  --   if str:match('[jt]sx?$') then
+  --     str = 2
+  --   end
+  -- end
+
   require 'lualine'.setup {
     options = {
       globalstatus = true,
@@ -83,6 +94,10 @@ M.setup = function()
           },
           icons_enabled = false,
           fmt = function(str, ctx)
+            if str:match('index%.[jt]sx?$') ~= nil then
+              str = filename_and_parent(ctx.bufnr)
+            end
+
             if ctx.beforecurrent then
               return str .. '%#' .. buffer_inactive_hl .. '#'
             else

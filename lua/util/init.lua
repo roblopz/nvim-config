@@ -243,22 +243,16 @@ function M.get_working_directory()
   return lspUtil.find_git_ancestor(startpath) or lspUtil.find_package_json_ancestor(startpath)
 end
 
-local function printMsg(msg, hi)
-  vim.cmd(string.format("echohl %s", hi))
-  vim.cmd(string.format("echo '%s'", msg))
-  vim.cmd("echohl none")
+function M.warn(msg, inspect)
+  require('notify')(M.coalesce(inspect, vim.inspect(msg), msg), 'warn')
 end
 
-function M.warn(msg)
-  printMsg(msg, 'WarningMsg')
+function M.info(msg, inspect)
+  require('notify')(M.coalesce(inspect, vim.inspect(msg), msg), 'info')
 end
 
-function M.info(msg)
-  printMsg(msg, 'MoreMsg')
-end
-
-function M.error(msg)
-  printMsg(msg, 'ErrorMsg')
+function M.error(msg, inspect)
+  require('notify')(M.coalesce(inspect, vim.inspect(msg), msg), 'error')
 end
 
 function M.get_base_config_path()

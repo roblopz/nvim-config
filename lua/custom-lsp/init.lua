@@ -3,14 +3,12 @@ local M = {}
 M.setup = function()
   local lspconfig = require 'lspconfig'
   local cmp = require 'cmp'
-  local capabilities = require('cmp_nvim_lsp').default_capabilities()
   local lspkind = require('lspkind')
 
   require("neodev").setup()
 
   cmp.setup({
     snippet = {
-      -- REQUIRED - you must specify a snippet engine
       expand = function(args)
         require('luasnip').lsp_expand(args.body)
       end,
@@ -70,18 +68,18 @@ M.setup = function()
       max_height = 40,
       max_width = 100,
       wrap = true,
-      floating_window = true,
+      floating_window = false,
       floating_window_above_cur_line = true,
       hint_enable = false,
       hi_parameter = "LspSignatureActiveParameter",
-      transparency = nil,                       -- disabled by default, allow floating win transparent value 1~100,
-      shadow_blend = 36,                        -- if you using shadow as border use this set the opacity
-      shadow_guibg = 'Black',                   -- if you using shadow as border use this set the color
+      transparency = nil,
+      shadow_blend = 36,                       -- if you using shadow as border use this set the opacity
+      shadow_guibg = 'Black',                  -- if you using shadow as border use this set the color
       always_trigger = false,
-      toggle_key = 'ã-3',                    -- toggle signature on and off in insert mode
-      toggle_key_flip_floatwin_setting = false, -- true: toggle float setting after toggle key pressed
-      select_signature_key = '<c-d>',           -- cycle to next signature, e.g. '<M-n>' function overloading
-      move_cursor_key = '<c-u>',                -- imap, use nvim_set_current_win to move cursor between current win and floating
+      toggle_key = "ã-3" ,                      -- toggle signature on and off in insert mode <A-Space>
+      toggle_key_flip_floatwin_setting = true, -- true: toggle float setting after toggle key pressed
+      select_signature_key = '<c-d>',          -- cycle to next signature, e.g. '<M-n>' function overloading
+      move_cursor_key = '<c-u>',               -- imap, use nvim_set_current_win to move cursor between current win and floating
       zindex = 200,
       handler_opts = {
         border = 'rounded'
@@ -191,6 +189,13 @@ M.setup = function()
       },
     })
   end
+
+  local capabilities = require('cmp_nvim_lsp').default_capabilities()
+
+  capabilities.textDocument.foldingRange = {
+    dynamicRegistration = false,
+    lineFoldingOnly = true
+  }
 
   lspconfig.tsserver.setup {
     capabilities = capabilities,

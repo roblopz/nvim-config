@@ -1,17 +1,15 @@
-local winThere = require'win-there'
-
 local M = {}
 
 M.config = { debug = true }
 
 local function get_lsp_conf(data)
   local uri = data.targetUri or data.uri
-  local range = data.targetRange or data.range
+  local range = data.targetSelectionRange or data.targetRange or data.range
 
   return uri, { range.start.line + 1, range.start.character }
 end
 
-local handle = function(result, opts)
+local handle = function(result, open_win_opts)
   if not result then
     return
   end
@@ -26,45 +24,45 @@ local handle = function(result, opts)
   end
 
   target, cursor_position = get_lsp_conf(data)
-
   local buffer = type(target) == "string" and vim.uri_to_bufnr(target) or target
 
-
-  local winThereOpts = { set_cursor = cursor_position }
-  if opts and type(opts.mode) == "string" then
-    winThereOpts.modes = { opts.mode }
-  end
-
-  winThere.open(buffer, winThereOpts)
+  require 'open-window'.open(
+    buffer,
+    vim.tbl_deep_extend('force', open_win_opts or {}, { on_open_set_cursor = cursor_position })
+  )
 end
 
-local legacy_handler = function(lsp_call, opts)
+local legacy_handler = function(_, open_win_opts)
   return function(_, _, result)
-    handle(result, opts)
+    handle(result, open_win_opts)
   end
 end
 
-local handler = function(lsp_call, opts)
+local handler = function(_, open_win_options)
   return function(_, result, _, _)
-    handle(result, opts)
+    handle(result, open_win_options)
   end
 end
 
-local get_handler = function(lsp_call, opts)
+local get_handler = function(lsp_call, open_win_opts)
   -- Only really need to check one of the handlers
   if debug.getinfo(vim.lsp.handlers["textDocument/definition"]).nparams == 4 then
-    return handler(lsp_call, opts)
+    return handler(lsp_call, open_win_opts)
   else
-    return legacy_handler(lsp_call, opts)
+    return legacy_handler(lsp_call, open_win_opts)
   end
 end
 
 local function makeHandler(lsp_call)
-  return function(opts)
-    _G.opt = opts or 'none'
-
+  return function(open_win_opts)
     local params = vim.lsp.util.make_position_params()
-    local success, _ = pcall(vim.lsp.buf_request, 0, lsp_call, params, get_handler(lsp_call, opts))
+    local success, _ = pcall(
+      vim.lsp.buf_request,
+      0,
+      lsp_call,
+      params,
+      get_handler(lsp_call, open_win_opts)
+    )
 
     if not success then
       print("goto-preview: Error calling LSP" + lsp_call + ". The current language lsp might not support it.")
@@ -77,4 +75,3 @@ M.go_to_type_definition = makeHandler("textDocument/typeDefinition")
 M.go_to_implementation = makeHandler("textDocument/implementation")
 
 return M
-

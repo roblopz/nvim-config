@@ -51,7 +51,7 @@ M.setup = function()
     }
   }
 
-  function help_path()
+  local function help_path()
     local str = debug.getinfo(2, "S").source:sub(2)
     return str:match("(.*/)") .. "help.txt";
   end

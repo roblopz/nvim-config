@@ -11,7 +11,7 @@ local function make_win_map(win_mode, reopen_prompt)
     local entry = state.get_selected_entry()
 
     if not entry then
-      require 'util'.warn("No telescope entry info")
+      require 'lua.plugins.util'.warn("No telescope entry info")
       return;
     end
 
@@ -20,7 +20,7 @@ local function make_win_map(win_mode, reopen_prompt)
     local prompt_input = state.get_current_line()
 
     if not bufnr_or_fname then
-      require 'util'.warn("No telescope bufnr/filename info")
+      require 'lua.plugins.util'.warn("No telescope bufnr/filename info")
       return;
     end
 

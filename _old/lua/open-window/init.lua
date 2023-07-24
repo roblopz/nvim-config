@@ -1,6 +1,6 @@
 local M = {}
 
-local util = require 'util'
+local util = require 'lua.plugins.util'
 M.excludeWinFileTypes = { 'NvimTree', "neo-tree", "notify", "TelescopePrompt", "qf", "dap-repl", "quickfix" }
 
 local default_options = {

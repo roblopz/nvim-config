@@ -95,6 +95,7 @@ call plug#begin()
 nnoremap <silent> * :let @/= '\<' . expand('<cword>') . '\>' <bar> set hls <cr>
 nnoremap <silent> g* :let @/=expand('<cword>') <bar> set hls <cr>
 
+" Line numbering on telescope prompts
 autocmd User TelescopePreviewerLoaded setlocal nonumber
 
 " Refresh file changes

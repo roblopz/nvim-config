@@ -1,11 +1,12 @@
--- Set global cwd to this path
-_G.cwd = require 'plugin.util'.dirname()
-
 -- Load configs in vim format
-vim.cmd(string.format("source %s", _G.cwd .. "config.vim"))
+vim.cmd(string.format("source %s", vim.fn.stdpath('config') .. "/config.vim"))
+
+-- Helper for plugin spec
+_G.plugin_module = function(name)
+  return vim.fn.stdpath('config') .. '/lua/custom-plugin/' .. name;
+end
 
 --[[ Load lazy --]]
-
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
 if not vim.loop.fs_stat(lazypath) then
@@ -20,4 +21,4 @@ if not vim.loop.fs_stat(lazypath) then
 end
 
 vim.opt.rtp:prepend(lazypath)
-require("lazy").setup("spec")
+require("lazy").setup("plugin")

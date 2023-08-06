@@ -3,6 +3,9 @@ return {
 	-- Lsp
 	{
 		"neovim/nvim-lspconfig",
+		name = "old-lsp",
+		dev = true,
+		enabled = false,
 		event = { "BufReadPre", "BufNewFile" },
 		dependencies = {
 			"williamboman/mason.nvim",
@@ -21,9 +24,6 @@ return {
 				},
 				severity_sort = true,
 			},
-			-- Enable this to enable the builtin LSP inlay hints on Neovim >= 0.10.0
-			-- Be aware that you also will need to properly configure your LSP server to provide the inlay hints.
-			inlay_hints = { enabled = false },
 			-- add any global capabilities here
 			capabilities = {
 				textDocument = {
@@ -46,9 +46,9 @@ return {
 					-- keys = {},
 					settings = {
 						Lua = {
-              format = {
-                enable = false -- Using stylua
-              },
+							format = {
+								enable = false, -- Using stylua
+							},
 							runtime = {
 								version = "LuaJIT",
 							},
@@ -119,6 +119,8 @@ return {
 					end
 				end
 
+				_G.seq = _G.seq or {}
+				table.insert(_G.seq, "LSP")
 				require("lspconfig")[server].setup(server_opts)
 			end
 
@@ -164,6 +166,9 @@ return {
 	-- auto completion
 	{
 		"hrsh7th/nvim-cmp",
+		name = "old-cmp",
+		dev = true,
+		enabled = false,
 		version = false, -- last release is way too old
 		event = "InsertEnter",
 		dependencies = {
@@ -178,7 +183,7 @@ return {
 			vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
 
 			local cmp = require("cmp")
-			local defaults = require("cmp.config.default")()
+			local cmp_defaults = require("cmp.config.default")()
 			local lspkind = require("lspkind")
 
 			return {
@@ -223,17 +228,14 @@ return {
 						hl_group = "CmpGhostText",
 					},
 				},
-				sorting = defaults.sorting,
+				sorting = cmp_defaults.sorting,
 			}
 		end,
 		config = function(_, opts)
 			local cmp = require("cmp")
 
-			cmp.setup(opts)
-
 			-- Use buffer source for `/` and `?` (if you enabled `native_menu`, this won't work anymore).
-      _G.mapping = cmp.mapping.preset.cmdline()
-			cmp.setup.cmdline({ '/', '?' }, {
+			cmp.setup.cmdline({ "/", "?" }, {
 				mapping = cmp.mapping.preset.cmdline(),
 				sources = {
 					{ name = "buffer" },
@@ -269,17 +271,13 @@ return {
 			}
 		end,
 	},
-	-- cmdline tools and lsp server
+	-- Install language servers
 	{
 		"williamboman/mason.nvim",
 		cmd = "Mason",
-		keys = { { "<leader>cm", "<cmd>Mason<cr>", desc = "Mason" } },
 		build = ":MasonUpdate",
 		opts = {
-			ensure_installed = {
-				"stylua",
-				"shfmt",
-			},
+			ensure_installed = { "stylua" },
 		},
 		config = function(_, opts)
 			require("mason").setup(opts)
@@ -292,6 +290,7 @@ return {
 					end
 				end
 			end
+
 			if mr.refresh then
 				mr.refresh(ensure_installed)
 			else

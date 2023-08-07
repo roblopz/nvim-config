@@ -19,6 +19,7 @@ return {
       }
     },
     highlights = {
+      show_prompt = false,
       statusline = {
         focused = {
           fg = '#ededed',

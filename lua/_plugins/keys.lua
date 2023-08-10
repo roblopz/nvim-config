@@ -26,7 +26,10 @@ return {
 		-- Misc
 		wk.register({
 			["<leader>"] = {
-				["<space>"] = { "<Cmd>nohlsearch<CR>", "Toggle off highlight search" },
+				["<space>"] = { function ()
+				  vim.cmd("nohlsearch")
+          require'flash'.toggle(false)
+				end, "Toggle off highlight search" },
 				["o"] = { "o<Esc>", "(n) Insert blank line below" },
 				["O"] = { "O<Esc>", "(n) Insert blank line above" },
 			},

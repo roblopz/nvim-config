@@ -26,7 +26,7 @@ return {
 				float = {
 					border = "rounded",
 					severity_sort = true,
-					source = true
+					source = true,
 				},
 			},
 			capabilities = {
@@ -204,6 +204,7 @@ return {
 		dependencies = { "mason.nvim", "nvim-lua/plenary.nvim" },
 		opts = function()
 			local nls = require("null-ls")
+
 			return {
 				root_dir = require("null-ls.utils").root_pattern(".null-ls-root", ".neoconf.json", "Makefile", ".git"),
 				sources = {
@@ -213,7 +214,7 @@ return {
 					nls.builtins.formatting.stylua,
 				},
 			}
-		end,
+		end
 	},
 	-- Install language servers
 	{

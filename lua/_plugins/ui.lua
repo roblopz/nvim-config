@@ -110,6 +110,7 @@ return {
 			modes = {
 				search = {
 					enabled = false,
+					highlight = { backdrop = true },
 				},
 				char = {
 					highlight = { backdrop = false },
@@ -118,13 +119,34 @@ return {
 		},
 		keys = {
       -- stylua: ignore start
-    { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash jump" },
-    { "S", mode = { "n", "o", "x" }, function() require("flash").treesitter() end, desc = "Flash Treesitter select" },
-    { "<c-s>", mode = { "n" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
-    { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+    { "<leader>s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash jump" },
+    { "<leader>S", mode = { "n", "o", "x" }, function() require("flash").treesitter() end, desc = "Flash Treesitter select" },
+    { "<leader><C-s>", mode = { "n" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+    { "<C-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
 			-- stylua: ignore end
 		},
+		config = function(_, opts)
+      -- If flash was enabled, disable it at exit search
+			vim.api.nvim_create_autocmd("CmdlineEnter", {
+				callback = function()
+					local t = vim.fn.getcmdtype()
+					local is_search = t == "/" or t == "?"
+
+					if is_search then
+						vim.api.nvim_create_autocmd("CmdlineLeave", {
+							once = true,
+							callback = vim.schedule_wrap(function()
+								require("flash").toggle(false)
+							end),
+						})
+					end
+				end,
+			})
+
+			require("flash").setup(opts)
+		end,
 	},
+	-- Noice ui
 	{
 		"folke/noice.nvim",
 		dependencies = { "nvim-telescope/telescope.nvim" },
@@ -139,6 +161,12 @@ return {
 				hover = { enabled = false },
 				signature = { enabled = false },
 			},
+			presets = {
+				bottom_search = true,
+				command_palette = true,
+				long_message_to_split = true,
+				lsp_doc_border = true,
+			},
 			routes = {
 				{
 					filter = {
@@ -147,21 +175,16 @@ return {
 							{ find = "%d+L, %d+B" },
 							{ find = "; after #%d+" },
 							{ find = "; before #%d+" },
+							{ find = "search hit TOP" },
 						},
 					},
 					view = "mini",
 				},
 			},
-			presets = {
-				bottom_search = true,
-				command_palette = true,
-				long_message_to_split = true,
-				lsp_doc_border = true,
-			},
 		},
 		keys = {
 			{
-				"<C-n>",
+				"<C-e>",
 				function()
 					require("noice").redirect(vim.fn.getcmdline())
 				end,

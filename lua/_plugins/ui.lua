@@ -126,7 +126,7 @@ return {
 			-- stylua: ignore end
 		},
 		config = function(_, opts)
-      -- If flash was enabled, disable it at exit search
+			-- If flash was enabled, disable it at exit search
 			vim.api.nvim_create_autocmd("CmdlineEnter", {
 				callback = function()
 					local t = vim.fn.getcmdtype()
@@ -176,9 +176,21 @@ return {
 							{ find = "; after #%d+" },
 							{ find = "; before #%d+" },
 							{ find = "search hit TOP" },
+							{ find = "%d fewer lines" },
+							{ find = "%d lines yanked" },
+							{ find = "Already at oldest change" },
 						},
 					},
 					view = "mini",
+				},
+				{
+          view = "mini",
+					filter = {
+						any = {
+							{ find = "diagnostics" },
+						},
+					},
+          opts = { skip = true }
 				},
 			},
 		},

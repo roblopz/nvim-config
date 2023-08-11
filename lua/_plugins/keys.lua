@@ -44,7 +44,7 @@ return {
 			["ã-1"] = { "<Cmd>wa<CR>", "Save", mode = "n" }, -- <Cmd-A-w>
 			["ã-2"] = { "<Cmd>lua vim.lsp.buf.format()<CR>", "Formatting", mode = "n" }, -- <A-S-f>
 			["ã-3"] = { "<Cmd>lua require'lsp_signature'.toggle_float_win()<CR>", "Signature toggle", mode = "n" }, -- <A-Space>
-			["ã-4"] = { "<Cmd>ESLintFix<CR>", "Lint", mode = "n" }, -- <A-S-e>
+			["ã-4"] = { "<Cmd>:FormatWrite<CR>", "Lint", mode = "n" }, -- <A-S-e>
 			["ã-5"] = { "<Cmd>lua vim.lsp.buf.code_action()<CR>", "Code Action", mode = "n" }, -- <Cmd-.>
 			["ã-6"] = { "<Cmd>lua vim.lsp.buf.rename()<CR>", "Rename", mode = "n" }, -- F2
 		})
@@ -54,7 +54,7 @@ return {
 			["ã-0"] = { "<Cmd>w<CR>", "Save", mode = "i" },
 			["ã-1"] = { "<Cmd>wa<CR>", "Save", mode = "i" },
 			["ã-2"] = { "<Cmd>lua vim.lsp.buf.format()<CR>", "Formatting", mode = "i" },
-			["ã-4"] = { "<Cmd>ESLintFix<CR>", "Lint", mode = "i" },
+			["ã-4"] = { "<Cmd>:Format<CR>", "Lint", mode = "i" },
 		})
 
 		-- LSP diagnostics

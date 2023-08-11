@@ -197,7 +197,7 @@ return {
 			delete_check_events = "TextChanged",
 		},
 	},
-	-- Formatters
+	-- LSP client middleware
 	{
 		"jose-elias-alvarez/null-ls.nvim",
 		event = { "BufReadPre", "BufNewFile" },
@@ -206,7 +206,6 @@ return {
 			local nls = require("null-ls")
 
 			return {
-				root_dir = require("null-ls.utils").root_pattern(".null-ls-root", ".neoconf.json", "Makefile", ".git"),
 				sources = {
 					nls.builtins.code_actions.eslint_d,
 					nls.builtins.diagnostics.eslint_d,
@@ -214,7 +213,29 @@ return {
 					nls.builtins.formatting.stylua,
 				},
 			}
-		end
+		end,
+	},
+	-- Run formatters on demand (:Format, :FormatWrite)
+	{
+		"mhartington/formatter.nvim",
+		opts = function()
+			return {
+				filetype = {
+          javascript = {
+            require'formatter.filetypes.javascript'.eslint_d
+          },
+          javascriptreact = {
+            require'formatter.filetypes.javascriptreact'.eslint_d
+          },
+					typescript = {
+            require'formatter.filetypes.typescript'.eslint_d
+					},
+          typescriptreact = {
+            require'formatter.filetypes.typescriptreact'.eslint_d
+          }
+				},
+			}
+		end,
 	},
 	-- Install language servers
 	{

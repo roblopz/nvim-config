@@ -15,7 +15,17 @@ return {
       -- Commands
       { "<leader>fc", "<cmd>Telescope command_history<cr>", desc = "Command History" },
       -- Buffers
-      { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
+      {
+        "<leader>fb",
+        function ()
+          require'telescope.builtin'.buffers({
+            sort_lastused = true,
+            ignore_current_buffer = true,
+            only_cwd = true,
+          })
+        end,
+        desc = "Buffers"
+      },
       { "<leader>fB", "<cmd>Telescope buffers show_all_buffers=true<cr>", desc = "Switch Buffer" },
       -- old files
       { "<leader>fo", function () require'telescope.builtin'.oldfiles({ cwd = vim.loop.cwd() }) end, desc = "Recent (cwd)" },
@@ -58,6 +68,11 @@ return {
 								{
 									["<C-k>"] = lga_actions.quote_prompt(),
 									["<C-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+									["<Tab>"] = function(prompt)
+										local actions = require("telescope.actions")
+										actions.toggle_selection(prompt)
+										actions.move_selection_worse(prompt)
+									end,
 								}
 							),
 						},

@@ -1,9 +1,15 @@
+local config_path = vim.fn.stdpath('config')
+
 -- Load configs in vim format
-vim.cmd(string.format("source %s", vim.fn.stdpath('config') .. "/config.vim"))
+vim.cmd(string.format("source %s", config_path .. "/config.vim"))
 
 -- Helper for plugin spec
 _G.plugin_module = function(name)
-  return vim.fn.stdpath('config') .. '/lua/custom-plugin/' .. name;
+  return config_path .. '/lua/' .. name;
+end
+
+_G.log = function (...)
+  print(vim.inspect(...))
 end
 
 --[[ Load lazy --]]
@@ -21,4 +27,4 @@ if not vim.loop.fs_stat(lazypath) then
 end
 
 vim.opt.rtp:prepend(lazypath)
-require("lazy").setup("_plugins")
+require("lazy").setup("_lazy")

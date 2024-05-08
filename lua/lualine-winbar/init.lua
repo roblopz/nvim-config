@@ -30,7 +30,7 @@ local function get_win_bar_path(buf, folder_level)
 		sep = "%#WinbarFnameSep#" .. " › " .. "%*",
 	}
 
-  folder_level = folder_level or 0
+	folder_level = folder_level or 0
 
 	local items = {}
 	local folder = " " .. "%*"
@@ -63,16 +63,27 @@ M.win_bar_fname = function(path_depth)
 			return
 		end
 
-    path_depth = path_depth or 0
+		path_depth = path_depth or 0
 
-    -- Go up one level if fname is "index".xx?
-    local fname = vim.fn.expand('%:t')
-    if fname:match('index%.[jt]sx?$') ~= nil and path_depth < 1 then
-      path_depth = 1
-    end
+		-- Go up one level if fname is "index".xx?
+		local fname = vim.fn.expand("%:t")
+		if fname:match("index%.[jt]sx?$") ~= nil and path_depth < 1 then
+			path_depth = 1
+		end
 
 		return get_win_bar_path(vim.fn.bufnr(), path_depth)
 	end
+end
+
+M.win_bar_win_buf_info = function()
+	local winid = vim.api.nvim_get_current_win()
+	local winconf = vim.api.nvim_win_get_config(winid)
+
+	if #winconf.relative ~= 0 then
+		return
+	end
+
+  return string.format("winid=%s / bufnr=%s", winid, vim.fn.bufnr())
 end
 
 M.setup = function()

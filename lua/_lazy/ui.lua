@@ -1,7 +1,12 @@
 return {
 	{ "stevearc/dressing.nvim" },
 	{ "brenoprata10/nvim-highlight-colors" },
-	{ "rcarriga/nvim-notify" },
+	{
+		"rcarriga/nvim-notify",
+		opts = {
+			background_colour = "#1F1F28",
+		},
+	},
 	{ "kevinhwang91/nvim-bqf", opts = { preview = { auto_preview = false } } },
 	{
 		"echasnovski/mini.animate",
@@ -17,7 +22,7 @@ return {
 					enable = false,
 				},
 				resize = {
-					enable = true,
+					enable = false,
 					timing = animate.gen_timing.linear({ duration = 140, unit = "total" }),
 				},
 				open = {
@@ -32,7 +37,7 @@ return {
 	{
 		"karb94/neoscroll.nvim",
 		opts = {
-			performance_mode = false,
+			performance_mode = true,
 			hide_cursor = false, -- Hide cursor while scrolling
 			stop_eof = true, -- Stop at <EOF> when scrolling downwards
 			respect_scrolloff = true, -- Stop scrolling when the cursor reaches the scrolloff margin of the file
@@ -167,8 +172,16 @@ return {
 				long_message_to_split = true,
 				lsp_doc_border = true,
 			},
+			views = {
+				mini = {
+					win_options = {
+						winblend = 0,
+					},
+				},
+			},
 			routes = {
 				{
+					view = "mini",
 					filter = {
 						event = "msg_show",
 						any = {
@@ -181,17 +194,27 @@ return {
 							{ find = "Already at oldest change" },
 						},
 					},
-					view = "mini",
 				},
 				{
-          view = "mini",
+					view = "mini",
 					filter = {
 						any = {
 							{ find = "diagnostics" },
 						},
 					},
-          opts = { skip = true }
+					opts = { skip = true },
 				},
+			},
+			cmdline = {
+				enabled = true, -- enables the Noice cmdline UI
+			},
+			messages = {
+				enabled = false, -- enables the Noice messages UI
+				view = "notify", -- default view for messages
+				view_error = "notify", -- view for errors
+				view_warn = "notify", -- view for warnings
+				view_history = "messages", -- view for :messages
+				view_search = false, -- view for search count messages. Set to `false` to disable
 			},
 		},
 		keys = {

@@ -14,14 +14,18 @@ return {
 		opts = {
 			highlight = { enable = true },
 			indent = { enable = true },
-			autotag = { enable = true },
-			context_commentstring = { enable = true, enable_autocmd = false },
+			autotag = {
+				enable = true,
+				enable_rename = true,
+				enable_close_on_slash = false,
+			},
+			-- context_commentstring = { enable = true, enable_autocmd = false },
 			ensure_installed = {
 				"html",
 				"javascript",
 				"jsdoc",
 				"json",
-        "json5",
+				"json5",
 				"lua",
 				"luadoc",
 				"query",
@@ -121,23 +125,12 @@ return {
 	-- Indentation
 	{
 		"lukas-reineke/indent-blankline.nvim",
+		main = "ibl",
 		event = { "BufReadPost", "BufNewFile" },
 		opts = {
-			char = "│",
-			filetype_exclude = {
-				"help",
-				"alpha",
-				"dashboard",
-				"neo-tree",
-				"Trouble",
-				"lazy",
-				"mason",
-				"notify",
-				"toggleterm",
-				"lazyterm",
+			indent = {
+				char = "│",
 			},
-			show_trailing_blankline_indent = false,
-			show_current_context = false,
 		},
 	},
 	-- Indentation
@@ -175,58 +168,57 @@ return {
 		end,
 	},
 	-- Folds
-	{
-		"kevinhwang91/nvim-ufo",
-		dependencies = { "kevinhwang91/promise-async" },
-		keys = {
-			{ "zR", "<cmd>lua require'ufo'.openAllFolds()<CR>", desc = "Open all folds" },
-			{ "zM", "<cmd>lua require'ufo'.closeAllFolds()<CR>", desc = "Open all folds" },
-			{ "zr", "<cmd>lua require'ufo'.openFoldsExceptKinds()<CR>", desc = "Open all folds" },
-			{ "zm", "<cmd>lua require'ufo'.closeFoldsWith()<CR>", desc = "Open all folds" },
-			{ "zp", "<cmd>lua require'ufo'.peekFoldedLinesUnderCursor()<CR>", desc = "Open all folds" },
-		},
-		opts = {
-			preview = {
-				win_config = {
-					winblend = 0,
-				},
-			},
-			fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate)
-				local newVirtText = {}
-				local suffix = ("  %d "):format(endLnum - lnum)
-				local sufWidth = vim.fn.strdisplaywidth(suffix)
-				local targetWidth = width - sufWidth
-				local curWidth = 0
-				for _, chunk in ipairs(virtText) do
-					local chunkText = chunk[1]
-					local chunkWidth = vim.fn.strdisplaywidth(chunkText)
-					if targetWidth > curWidth + chunkWidth then
-						table.insert(newVirtText, chunk)
-					else
-						chunkText = truncate(chunkText, targetWidth - curWidth)
-						local hlGroup = chunk[2]
-						table.insert(newVirtText, { chunkText, hlGroup })
-						chunkWidth = vim.fn.strdisplaywidth(chunkText)
-						-- str width returned from truncate() may less than 2nd argument, need padding
-						if curWidth + chunkWidth < targetWidth then
-							---@diagnostic disable-next-line: param-type-mismatch
-							suffix = suffix .. (" "):rep(targetWidth - curWidth - chunkWidth)
-						end
-						break
-					end
-					curWidth = curWidth + chunkWidth
-				end
-				table.insert(newVirtText, { suffix, "MoreMsg" })
-				return newVirtText
-			end,
-		},
-		config = function(_, opts)
-			vim.o.foldcolumn = "0"
-			vim.o.foldlevel = 99
-			vim.o.foldlevelstart = 99
-			vim.o.foldenable = true
-
-			require("ufo").setup(opts)
-		end,
-	},
+	-- {
+	-- 	"kevinhwang91/nvim-ufo",
+	-- 	dependencies = { "kevinhwang91/promise-async" },
+	-- 	event = "BufReadPost",
+	-- 	keys = {
+	-- 		{ "zR", "<cmd>lua require'ufo'.openAllFolds()<CR>", desc = "Open all folds" },
+	-- 		{ "zM", "<cmd>lua require'ufo'.closeAllFolds()<CR>", desc = "Open all folds" },
+	-- 		{ "zr", "<cmd>lua require'ufo'.openFoldsExceptKinds()<CR>", desc = "Open all folds" },
+	-- 		{ "zm", "<cmd>lua require'ufo'.closeFoldsWith()<CR>", desc = "Open all folds" },
+	-- 		{ "zp", "<cmd>lua require'ufo'.peekFoldedLinesUnderCursor()<CR>", desc = "Open all folds" },
+	-- 	},
+	-- 	init = function()
+	-- 		vim.o.foldcolumn = "0"
+	-- 		vim.o.foldlevel = 99
+	-- 		vim.o.foldlevelstart = 99
+	-- 		vim.o.foldenable = true
+	-- 	end,
+	-- 	opts = {
+	-- 		preview = {
+	-- 			win_config = {
+	-- 				winblend = 0,
+	-- 			},
+	-- 		},
+	-- 		fold_virt_text_handler = function(virtText, lnum, endLnum, width, truncate)
+	-- 			local newVirtText = {}
+	-- 			local suffix = ("  %d "):format(endLnum - lnum)
+	-- 			local sufWidth = vim.fn.strdisplaywidth(suffix)
+	-- 			local targetWidth = width - sufWidth
+	-- 			local curWidth = 0
+	-- 			for _, chunk in ipairs(virtText) do
+	-- 				local chunkText = chunk[1]
+	-- 				local chunkWidth = vim.fn.strdisplaywidth(chunkText)
+	-- 				if targetWidth > curWidth + chunkWidth then
+	-- 					table.insert(newVirtText, chunk)
+	-- 				else
+	-- 					chunkText = truncate(chunkText, targetWidth - curWidth)
+	-- 					local hlGroup = chunk[2]
+	-- 					table.insert(newVirtText, { chunkText, hlGroup })
+	-- 					chunkWidth = vim.fn.strdisplaywidth(chunkText)
+	-- 					-- str width returned from truncate() may less than 2nd argument, need padding
+	-- 					if curWidth + chunkWidth < targetWidth then
+	-- 						---@diagnostic disable-next-line: param-type-mismatch
+	-- 						suffix = suffix .. (" "):rep(targetWidth - curWidth - chunkWidth)
+	-- 					end
+	-- 					break
+	-- 				end
+	-- 				curWidth = curWidth + chunkWidth
+	-- 			end
+	-- 			table.insert(newVirtText, { suffix, "MoreMsg" })
+	-- 			return newVirtText
+	-- 		end,
+	-- 	},
+	-- },
 }

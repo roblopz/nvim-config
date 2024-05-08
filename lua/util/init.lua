@@ -58,6 +58,21 @@ function M.tbl_first(tbl, fn)
 	return nil
 end
 
+function M.split_table(tbl, idx)
+	local t1 = {}
+	local t2 = {}
+
+	for i = 1, idx do
+		t1[i] = tbl[i]
+	end
+
+	for i = idx + 1, #tbl do
+		t2[i - idx] = tbl[i]
+	end
+
+	return t1, t2
+end
+
 function M.cwd()
 	local has_lsp_util, lsp_util = pcall(require, "lspconfig.util")
 	local cwd = vim.fn.getcwd()
@@ -77,7 +92,7 @@ M.path = {
 	join = function(...)
 		return table.concat(vim.tbl_flatten({ ... }), path_separator):gsub(path_separator .. "+", path_separator)
 	end,
-  -- Gets worspace root
+	-- Gets worspace root
 	get_root = function()
 		local root
 
@@ -90,7 +105,7 @@ M.path = {
 		root = root or vim.loop.cwd()
 		return root
 	end,
-  -- has_file fun(patterns: ...): boolean checks if file exists
+	-- has_file fun(patterns: ...): boolean checks if file exists
 	has_file = function(...)
 		local patterns = vim.tbl_flatten({ ... })
 		for _, name in ipairs(patterns) do
@@ -101,7 +116,7 @@ M.path = {
 		end
 		return false
 	end,
-  -- root_has_file fun(patterns: ...): boolean checks if file exists at root level
+	-- root_has_file fun(patterns: ...): boolean checks if file exists at root level
 	root_has_file = function(...)
 		local root = M.path.get_root()
 		local patterns = vim.tbl_flatten({ ... })
@@ -112,7 +127,7 @@ M.path = {
 		end
 		return false
 	end,
-  -- root_has_file_matches fun(pattern: string): boolean checks if pattern matches a file at root level
+	-- root_has_file_matches fun(pattern: string): boolean checks if pattern matches a file at root level
 	root_has_file_matches = function(pattern)
 		local root = M.path.get_root()
 		local handle = vim.loop.fs_scandir(root)
@@ -144,6 +159,15 @@ end
 
 function M.error(msg, inspect)
 	require("notify")(M.coalesce(inspect, vim.inspect(msg), msg), "error")
+end
+
+function M.buf_excluded(exclude, bufnr)
+	if not bufnr then
+		bufnr = vim.api.nvim_get_current_buf()
+	end
+
+	local btype = vim.api.nvim_buf_get_option(bufnr, "filetype")
+	return btype == "" or btype == nil or vim.tbl_contains(exclude, btype)
 end
 
 return M

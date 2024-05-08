@@ -5,6 +5,9 @@ return {
 		name = "catppuccin",
 		priority = 1000,
 		config = function()
+			require("catppuccin").setup({
+				transparent_background = true,
+			})
 			vim.cmd("colorscheme catppuccin-mocha")
 		end,
 	},
@@ -16,8 +19,8 @@ return {
 			-- Hide tabline
 			vim.cmd("set showtabline=0")
 
-			local lualine_util = require("util.lualine")
-			lualine_util.setup()
+			local lualine_winbar = require("lualine-winbar")
+			lualine_winbar.setup()
 
 			return {
 				options = {
@@ -31,7 +34,14 @@ return {
 				extensions = { "neo-tree", "quickfix", "nvim-dap-ui" },
 				tabline = {},
 				sections = {
-					lualine_a = { "mode" },
+					lualine_a = {
+						"mode",
+						{
+							require("noice").api.statusline.mode.get,
+							cond = require("noice").api.statusline.mode.has,
+							color = { fg = "#353535", gui = "bold" },
+						},
+					},
 					lualine_b = { "branch" },
 					lualine_c = { { "filename", path = 3 } },
 					lualine_x = { "filetype" },
@@ -52,21 +62,21 @@ return {
 				winbar = {
 					lualine_c = {
 						{
-              lualine_util.win_bar_fname(2),
-              cond = function ()
-                return vim.bo.filetype ~= 'neo-tree'
-              end
-            },
+							lualine_winbar.win_bar_fname(2),
+							cond = function()
+								return vim.bo.filetype ~= "neo-tree"
+							end,
+						},
 					},
 					lualine_y = { "diagnostics" },
 				},
 				inactive_winbar = {
 					lualine_c = {
 						{
-							lualine_util.win_bar_fname(),
-              cond = function ()
-                return vim.bo.filetype ~= 'neo-tree'
-              end
+							lualine_winbar.win_bar_fname(2),
+							cond = function()
+								return vim.bo.filetype ~= "neo-tree"
+							end,
 						},
 					},
 					lualine_x = { "diagnostics" },

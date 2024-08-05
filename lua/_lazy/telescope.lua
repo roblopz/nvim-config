@@ -1,4 +1,4 @@
-local telescope_util = require("util.telescope")
+local telescope_util = require("custom-util.telescope")
 
 return {
 	{
@@ -14,7 +14,8 @@ return {
       { "<leader>fF", "<cmd>Telescope find_files hidden=true no_ignore=true<cr>", desc = "Find Files (all)" },
       -- Commands
       { "<leader>fc", "<cmd>Telescope command_history<cr>", desc = "Command History" },
-      -- Buffers
+      -- Windows
+      { "<leader>fw", "<cmd>Telescope windows<cr>", desc = "Windows" },
       {
         "<leader>fb",
         function ()
@@ -24,25 +25,31 @@ return {
             only_cwd = true,
           })
         end,
-        desc = "Buffers"
+        desc = "Buffers (not current)"
       },
-      { "<leader>fB", "<cmd>Telescope buffers show_all_buffers=true<cr>", desc = "Switch Buffer" },
+      {
+        "<leader>fB",
+        function ()
+          require'telescope.builtin'.buffers({
+            sort_lastused = true,
+            only_cwd = true,
+          })
+        end,
+        desc = "Buffers (all)"
+      },
       -- old files
       { "<leader>fo", function () require'telescope.builtin'.oldfiles({ cwd = vim.loop.cwd() }) end, desc = "Recent (cwd)" },
       { "<leader>fO", "<cmd>Telescope oldfiles<cr>", desc = "Recent (all cwd's)" },
       -- Git
-      { "<leader>fi", "<cmd>Telescope git_commits<CR>", desc = "commits" },
-      { "<leader>fI", "<cmd>Telescope git_status<CR>", desc = "status" },
+      { "<leader>fs", "<cmd>Telescope git_status<CR>", desc = "status" },
       -- Current buffer
-      { "<leader>f/", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Buffer" },
+      { "<leader>fz", "<cmd>Telescope current_buffer_fuzzy_find<cr>", desc = "Buffer find" },
       -- Diagnostics
       { "<leader>fd", "<cmd>Telescope diagnostics bufnr=0<cr>", desc = "Document diagnostics" },
       { "<leader>fD", "<cmd>Telescope diagnostics<cr>", desc = "Workspace diagnostics" },
       -- Grep
-      { "<leader>fg", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>", desc = "Grep (root dir)" },
-      { "<leader>fw", "<cmd>Telescope grep_string mode=v<cr>", desc = "Grep Word" },
-      -- Marks
-      { "<leader>fm", "<cmd>Telescope marks<cr>", desc = "Jump to Mark" },
+      { "<leader>fg", "<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>", desc = "Live grep" },
+      { "<leader>fG", "<cmd>Telescope grep_string mode=v<cr>", desc = "Grep Word" },
 			-- stylua: ignore end
 		},
 		opts = function()
@@ -52,8 +59,12 @@ return {
 				defaults = {
 					prompt_prefix = " ",
 					selection_caret = " ",
+					layout_strategy = "vertical",
+					sorting_strategy = "ascending",
 					layout_config = {
 						scroll_speed = 10,
+						prompt_position = "top",
+						mirror = true,
 					},
 				},
 				extensions = {
@@ -104,6 +115,11 @@ return {
 							i = telescope_util.get_mappings("oldfiles"),
 						},
 					},
+					lsp_references = {
+						mappings = {
+							i = telescope_util.get_mappings("oldfiles"),
+						},
+					},
 				},
 			}
 		end,
@@ -112,6 +128,7 @@ return {
 			local telescope = require("telescope")
 			telescope.setup(opts)
 			telescope.load_extension("live_grep_args")
+			telescope.load_extension("windows")
 		end,
 	},
 }

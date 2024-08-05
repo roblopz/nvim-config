@@ -1,88 +1,98 @@
+local function set_highlights()
+	local tabline_white = "#eeffff"
+	local tabline_active = "#658594"
+	local tabline_inactive = "#363646"
+
+	-- Define your highlighting groups
+	local tab_highlights = {
+		TablineWinActive = { fg = tabline_white, bg = tabline_active },
+		TablineWinInactive = { fg = tabline_white, bg = tabline_inactive },
+		TablineTabActive = { fg = tabline_white, bg = tabline_active },
+		TablineTabInactive = { fg = tabline_white, bg = tabline_inactive },
+	}
+
+	for group, p in pairs(tab_highlights) do
+		vim.api.nvim_set_hl(0, group, { fg = p.fg, bg = p.bg })
+	end
+
+	local low_highlight = { fg = "#dcd7ba", bg = "#2d4f67" }
+	local text_highlight = { fg = "#223249", bg = "#ffd13b" }
+	local text_highlight_alt = { bg = "#484c24" }
+
+	local other_highlights = {
+		Visual = { bg = "#4b5263" },
+		TelescopePreviewLine = low_highlight,
+		Search = text_highlight,
+		CurSearch = { fg = text_highlight.fg, bg = "#FFA066" },
+		YankyPut = text_highlight_alt,
+		YankyYanked = text_highlight_alt,
+		SubstituteRange = text_highlight_alt,
+		SubstituteExchange = text_highlight_alt,
+		SubstituteSubstituted = text_highlight_alt,
+	}
+
+	for group, p in pairs(other_highlights) do
+		vim.api.nvim_set_hl(0, group, { fg = p.fg, bg = p.bg })
+	end
+end
+
 return {
-	-- Actual colorscheme
 	{
-		"catppuccin/nvim",
-		name = "catppuccin",
-		priority = 1000,
-		config = function()
-			require("catppuccin").setup({
-				transparent_background = true,
-			})
-			vim.cmd("colorscheme catppuccin-mocha")
-		end,
-	},
-	-- lualine
-	{
-		"nvim-lualine/lualine.nvim",
-		event = "VeryLazy",
-		opts = function()
-			-- Hide tabline
-			vim.cmd("set showtabline=0")
+		{
+			"rebelot/kanagawa.nvim",
+			opts = {
+				theme = "wave",
+				undercurl = true, -- enable undercurls
+				commentStyle = { italic = true },
+				keywordStyle = { italic = true },
+				statementStyle = { bold = true },
+				transparent = true,
+				dimInactive = false,
+				terminalColors = true,
+				colors = {
+					theme = {
+						all = {
+							ui = {
+								bg_gutter = "none",
+							},
+						},
+					},
+				},
+				overrides = function(colors)
+					local theme = colors.theme
 
-			local lualine_winbar = require("lualine-winbar")
-			lualine_winbar.setup()
+					return {
+						NormalFloat = { bg = "none" },
+						FloatBorder = { bg = "none" },
+						FloatTitle = { bg = "none" },
+						-- Save an hlgroup with dark background and dimmed foreground
+						-- so that you can use it where your still want darker windows.
+						-- E.g.: autocmd TermOpen * setlocal winhighlight=Normal:NormalDark
+						NormalDark = { fg = theme.ui.fg_dim, bg = theme.ui.bg_m3 },
+						-- Popular plugins that open floats will link to NormalFloat by default;
+						-- set their background accordingly if you wish to keep them dark and borderless
+						LazyNormal = { bg = theme.ui.bg_m3, fg = theme.ui.fg_dim },
+						MasonNormal = { bg = theme.ui.bg_m3, fg = theme.ui.fg_dim },
+						Pmenu = { fg = theme.ui.shade0, bg = theme.ui.bg_p1 }, -- add `blend = vim.o.pumblend` to enable transparency
+						PmenuSel = { fg = "NONE", bg = theme.ui.bg_p2 },
+						PmenuSbar = { bg = theme.ui.bg_m1 },
+						PmenuThumb = { bg = theme.ui.bg_p2 },
+					}
+				end,
+			},
 
-			return {
-				options = {
-					theme = "auto",
-					globalstatus = true,
-					-- disabled_filetypes = {
-					-- 	statusline = { "dashboard", "alpha" },
-					-- 	winbar = { "dashboard", "alpha" },
-					-- },
-				},
-				extensions = { "neo-tree", "quickfix", "nvim-dap-ui" },
-				tabline = {},
-				sections = {
-					lualine_a = {
-						"mode",
-						{
-							require("noice").api.statusline.mode.get,
-							cond = require("noice").api.statusline.mode.has,
-							color = { fg = "#353535", gui = "bold" },
-						},
-					},
-					lualine_b = { "branch" },
-					lualine_c = { { "filename", path = 3 } },
-					lualine_x = { "filetype" },
-					lualine_y = {
-						{
-							"tabs",
-							mode = 1,
-						},
-						{
-							"progress",
-							cond = function()
-								return #vim.api.nvim_list_tabpages() < 2
-							end,
-						},
-					},
-					lualine_z = { "location" },
-				},
-				winbar = {
-					lualine_c = {
-						{
-							lualine_winbar.win_bar_fname(2),
-							cond = function()
-								return vim.bo.filetype ~= "neo-tree"
-							end,
-						},
-					},
-					lualine_y = { "diagnostics" },
-				},
-				inactive_winbar = {
-					lualine_c = {
-						{
-							lualine_winbar.win_bar_fname(2),
-							cond = function()
-								return vim.bo.filetype ~= "neo-tree"
-							end,
-						},
-					},
-					lualine_x = { "diagnostics" },
-				},
-			}
-		end,
-		config = true,
+			config = function(_, opts)
+				vim.api.nvim_create_autocmd("ColorScheme", {
+					pattern = "kanagawa",
+					callback = function()
+						vim.fn.system("kitty +kitten themes Kanagawa")
+					end,
+				})
+
+				require("kanagawa").setup(opts)
+				vim.cmd("colorscheme kanagawa")
+				set_highlights()
+			end,
+		},
 	},
 }

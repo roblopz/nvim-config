@@ -59,7 +59,6 @@ return {
 						},
 					},
 				},
-				-- dartls = {} // Setup by flutter-tools,
         eslint = {
           settings = {
             -- helps eslint find the eslintrc when it's placed in a subfolder instead of the cwd root
@@ -72,11 +71,12 @@ return {
 				local cmp_defaults = require("cmp.config.default")()
 				local lspkind = require("lspkind")
 
-				vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
+				-- vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
 
 				return {
 					snippet = {
 						expand = function(args)
+              _G.aa = args.body;
 							require("luasnip").lsp_expand(args.body)
 						end,
 					},
@@ -106,9 +106,10 @@ return {
 						}),
 					},
 					experimental = {
-						ghost_text = {
-							hl_group = "CmpGhostText",
-						},
+            ghost_text = false
+						-- ghost_text = {
+						-- 	hl_group = "CmpGhostText",
+						-- },
 					},
 					sorting = cmp_defaults.sorting,
 					window = {
@@ -185,6 +186,33 @@ return {
 
 					require("lspconfig")[server_key].setup(final_opts)
 				end
+			end
+		end,
+	},
+	-- Install language servers
+	{
+		"williamboman/mason.nvim",
+		cmd = "Mason",
+		build = ":MasonUpdate",
+		opts = {
+			ensure_installed = { "stylua" },
+		},
+		config = function(_, opts)
+			require("mason").setup(opts)
+			local mr = require("mason-registry")
+			local function ensure_installed()
+				for _, tool in ipairs(opts.ensure_installed) do
+					local p = mr.get_package(tool)
+					if not p:is_installed() then
+						p:install()
+					end
+				end
+			end
+
+			if mr.refresh then
+				mr.refresh(ensure_installed)
+			else
+				ensure_installed()
 			end
 		end,
 	},

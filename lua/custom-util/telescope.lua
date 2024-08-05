@@ -1,6 +1,6 @@
 local M = {}
 
-local util = require("util")
+local util = require("custom-util")
 
 local function make_win_map(win_mode, builtin)
 	return function(prompt_bufnr)

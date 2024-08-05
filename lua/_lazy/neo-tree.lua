@@ -1,3 +1,25 @@
+local function getTelescopeOpts(state, path)
+	return {
+		cwd = path,
+		search_dirs = { path },
+		attach_mappings = function(prompt_bufnr)
+			local actions = require("telescope.actions")
+			actions.select_default:replace(function()
+				actions.close(prompt_bufnr)
+				local action_state = require("telescope.actions.state")
+				local selection = action_state.get_selected_entry()
+				local filename = selection.filename
+				if filename == nil then
+					filename = selection[1]
+				end
+				-- any way to open the file without triggering auto-close event of neo-tree?
+				require("neo-tree.sources.filesystem").navigate(state, state.path, filename)
+			end)
+			return true
+		end,
+	}
+end
+
 return {
 	"nvim-neo-tree/neo-tree.nvim",
 	branch = "v3.x",
@@ -22,7 +44,7 @@ return {
 			"<leader>to",
 			function()
 				local nt = require("neo-tree.command")
-				nt.execute({ action = "close" })
+				-- nt.execute({ action = "close" })
 				nt.execute({ position = "float" })
 			end,
 			"Toggle Tree Float",
@@ -31,7 +53,7 @@ return {
 			"<leader>tp",
 			function()
 				local nt = require("neo-tree.command")
-				nt.execute({ action = "close" })
+				-- nt.execute({ action = "close" })
 				nt.execute({ position = "float", reveal = true })
 			end,
 			"Focus File Float",
@@ -40,11 +62,6 @@ return {
 			"<leader>tb",
 			"<Cmd>lua require'neo-tree.command'.execute({ reveal = true, position = 'float', source = 'buffers' })<CR>",
 			"Tree buffers",
-		},
-		{
-			"<leader>tg",
-			"<Cmd>lua require'neo-tree.command'.execute({ reveal = true, position = 'float', source = 'buffers' })<CR>",
-			"Tree Git Status",
 		},
 	},
 	deactivate = function()
@@ -96,6 +113,9 @@ return {
 					["<C-v>"] = make_win_open({ mode = "split" }),
 					["<C-x>"] = make_win_open({ mode = "split", horizontal = true }),
 					["<C-s>"] = make_win_open({ mode = "pick" }),
+					["f"] = "telescope_find",
+					["g"] = "telescope_grep",
+					["<C-o>"] = "system_open",
 				},
 			},
 			filesystem = {
@@ -103,6 +123,36 @@ return {
 			},
 			buffers = {
 				show_unloaded = false,
+			},
+			commands = {
+				telescope_find = function(state)
+					local node = state.tree:get_node()
+					local path = node:get_id()
+
+					if node.type == "directory" then
+						require("telescope.builtin").find_files(getTelescopeOpts(state, path))
+					end
+				end,
+				telescope_grep = function(state)
+					local node = state.tree:get_node()
+
+					if node.type == "directory" then
+						local path = node:get_id()
+						require("telescope.builtin").live_grep(getTelescopeOpts(state, path))
+					end
+				end,
+				system_open = function(state)
+					local node = state.tree:get_node()
+					local path = node:get_id()
+
+          if node.type == 'file' then
+            path = vim.fn.fnamemodify(path, ':h')
+          end
+
+          vim.notify(path)
+
+					vim.fn.jobstart({ "open", "-g", path }, { detach = true })
+				end,
 			},
 		}
 	end,

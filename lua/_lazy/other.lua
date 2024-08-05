@@ -2,10 +2,10 @@ return {
 	{
 		"folke/which-key.nvim",
 		event = "VeryLazy",
-		init = function()
-			vim.o.timeout = true
-			vim.o.timeoutlen = 300
-		end,
+		-- init = function()
+		-- 	vim.o.timeout = true
+		-- 	vim.o.timeoutlen = 300
+		-- end,
 		config = function()
 			local wk = require("which-key")
 
@@ -30,10 +30,9 @@ return {
 			-- Misc
 			wk.register({
 				["<leader>"] = {
-					["<space>"] = {
+					[","] = {
 						function()
 							vim.cmd("nohlsearch")
-							require("flash").toggle(false)
 						end,
 						"Toggle off highlight search",
 					},
@@ -46,6 +45,33 @@ return {
 				[">"] = { ">gv", mode = "v" },
 			})
 
+			local function try_eslint()
+				local buf_ftype = vim.bo.ft
+        local has_eslint = false;
+
+				local eslint_ftypes = {
+					"javascript",
+					"typescript",
+					"javascriptreact",
+					"typescriptreact",
+					"json",
+					"jsonc",
+				}
+
+				for _, ft in ipairs(eslint_ftypes) do
+					if ft == buf_ftype then
+						has_eslint = true;
+            break
+					end
+				end
+
+        if has_eslint then
+          vim.cmd('silent EslintFixAll');
+        else
+          vim.cmd('Format')
+        end
+			end
+
 			-- Special commands (some map from terminal emmulator) - n
 			wk.register({
 				["<C-space>"] = { "<Cmd>lua vim.lsp.buf.hover()<CR>", "Hover docs", mode = "n" },
@@ -53,7 +79,7 @@ return {
 				["ã-1"] = { "<Cmd>wa<CR>", "Save", mode = "n" }, -- <Cmd-A-w>
 				["ã-2"] = { "<Cmd>:Format<CR>", "Formatting", mode = "n" }, -- <A-S-f>
 				["ã-3"] = { "<Cmd>lua vim.lsp.buf.signature_help()<CR>", "Signature toggle", mode = "n" }, -- <A-Space>
-				["ã-4"] = { "<Cmd>:EslintFixAll<CR>", "Lint", mode = "n" }, -- <A-S-e>
+				["ã-4"] = { try_eslint, "Lint", mode = "n" }, -- <A-S-e>
 				["ã-5"] = { "<Cmd>lua vim.lsp.buf.code_action()<CR>", "Code Action", mode = "n" }, -- <Cmd-.>
 				["ã-6"] = { "<Cmd>lua vim.lsp.buf.rename()<CR>", "Rename", mode = "n" }, -- F2
 			})
@@ -82,6 +108,7 @@ return {
 					if vim.tbl_contains(exclude, vim.bo[buf].filetype) then
 						return
 					end
+
 					local mark = vim.api.nvim_buf_get_mark(buf, '"')
 					local lcount = vim.api.nvim_buf_line_count(buf)
 					if mark[1] > 0 and mark[1] <= lcount then

@@ -11,7 +11,7 @@ local M = {
 	}
 }
 
-local util = require("util")
+local util = require("custom-util")
 
 local pick_win_opts = { include_current_win = true, show_prompt = false }
 

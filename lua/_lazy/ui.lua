@@ -1,47 +1,15 @@
 return {
 	{ "stevearc/dressing.nvim" },
-	{ "brenoprata10/nvim-highlight-colors" },
 	{
 		"rcarriga/nvim-notify",
 		opts = {
-			background_colour = "#1F1F28",
+			background_colour = "#000000",
 		},
 	},
-	{ "kevinhwang91/nvim-bqf", opts = { preview = { auto_preview = false } } },
 	{
-		"echasnovski/mini.animate",
-		opts = function()
-			local animate = require("mini.animate")
-
-			return {
-				cursor = {
-					enable = true,
-					timing = animate.gen_timing.linear({ duration = 200, unit = "total" }),
-				},
-				scroll = {
-					enable = false,
-				},
-				resize = {
-					enable = false,
-					timing = animate.gen_timing.linear({ duration = 140, unit = "total" }),
-				},
-				open = {
-					enable = false,
-				},
-				close = {
-					enable = false,
-				},
-			}
-		end,
-	},
-	{
-		"karb94/neoscroll.nvim",
+		"kevinhwang91/nvim-bqf",
 		opts = {
-			performance_mode = true,
-			hide_cursor = false, -- Hide cursor while scrolling
-			stop_eof = true, -- Stop at <EOF> when scrolling downwards
-			respect_scrolloff = true, -- Stop scrolling when the cursor reaches the scrolloff margin of the file
-			cursor_scrolls_alone = true, -- The cursor will keep on scrolling even if the window cannot scroll further
+			preview = { auto_preview = false },
 		},
 	},
 	{
@@ -103,138 +71,67 @@ return {
 			})
 		end,
 	},
-	-- Workspace search
-	{ "nvim-pack/nvim-spectre" },
-	-- GIt diff view
-	{ "sindrets/diffview.nvim" },
 	-- Search & jump enhancements
 	{
 		"folke/flash.nvim",
 		event = "VeryLazy",
 		opts = {
+      label = {
+        style = "overlay",
+        rainbow = {
+          enabled = true,
+          shade = 5
+        }
+      },
 			modes = {
 				search = {
 					enabled = false,
 					highlight = { backdrop = true },
 				},
 				char = {
-					highlight = { backdrop = false },
+          enabled = false,
 				},
 			},
 		},
 		keys = {
       -- stylua: ignore start
-    { "<leader>s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash jump" },
-    { "<leader>S", mode = { "n", "o", "x" }, function() require("flash").treesitter() end, desc = "Flash Treesitter select" },
-    { "<leader><C-s>", mode = { "n" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
-    { "<C-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+      { "<leader>jj", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash jump" },
+      { "<leader>jv", mode = { "n", "o", "x" }, function() require("flash").treesitter() end, desc = "Treesitter select" },
+      { "<leader>js", mode = { "n" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
 			-- stylua: ignore end
 		},
-		config = function(_, opts)
-			-- If flash was enabled, disable it at exit search
-			vim.api.nvim_create_autocmd("CmdlineEnter", {
-				callback = function()
-					local t = vim.fn.getcmdtype()
-					local is_search = t == "/" or t == "?"
-
-					if is_search then
-						vim.api.nvim_create_autocmd("CmdlineLeave", {
-							once = true,
-							callback = vim.schedule_wrap(function()
-								require("flash").toggle(false)
-							end),
-						})
-					end
-				end,
-			})
-
-			require("flash").setup(opts)
-		end,
 	},
 	-- Noice ui
 	{
 		"folke/noice.nvim",
-		dependencies = { "nvim-telescope/telescope.nvim" },
-		event = "VeryLazy",
+		dependencies = { "MunifTanjim/nui.nvim" },
 		opts = {
 			lsp = {
+				progress = {
+					enabled = false,
+				},
+				-- override markdown rendering so that **cmp** and other plugins use **Treesitter**
 				override = {
 					["vim.lsp.util.convert_input_to_markdown_lines"] = true,
 					["vim.lsp.util.stylize_markdown"] = true,
 					["cmp.entry.get_documentation"] = true,
 				},
-				hover = { enabled = false },
-				signature = { enabled = false },
 			},
 			presets = {
-				bottom_search = true,
-				command_palette = true,
-				long_message_to_split = true,
-				lsp_doc_border = true,
-			},
-			views = {
-				mini = {
-					win_options = {
-						winblend = 0,
-					},
-				},
-			},
-			routes = {
-				{
-					view = "mini",
-					filter = {
-						event = "msg_show",
-						any = {
-							{ find = "%d+L, %d+B" },
-							{ find = "; after #%d+" },
-							{ find = "; before #%d+" },
-							{ find = "search hit TOP" },
-							{ find = "%d fewer lines" },
-							{ find = "%d lines yanked" },
-							{ find = "Already at oldest change" },
-						},
-					},
-				},
-				{
-					view = "mini",
-					filter = {
-						any = {
-							{ find = "diagnostics" },
-						},
-					},
-					opts = { skip = true },
-				},
-			},
-			cmdline = {
-				enabled = true, -- enables the Noice cmdline UI
+				command_palette = true, -- position the cmdline and popupmenu together
+				lsp_doc_border = true, -- add a border to hover docs and signature help
 			},
 			messages = {
-				enabled = false, -- enables the Noice messages UI
-				view = "notify", -- default view for messages
-				view_error = "notify", -- view for errors
-				view_warn = "notify", -- view for warnings
-				view_history = "messages", -- view for :messages
-				view_search = false, -- view for search count messages. Set to `false` to disable
+				enabled = false,
 			},
 		},
-		keys = {
-			{
-				"<C-e>",
-				function()
-					require("noice").redirect(vim.fn.getcmdline())
-				end,
-				mode = "c",
-				desc = "Redirect Cmdline",
-			},
-			{
-				"<leader>.",
-				"<cmd>Noice dismiss<cr>",
-				desc = "Dismiss messages",
-			},
-		},
-		config = function(_, opts)
-			require("noice").setup(opts)
-			require("telescope").load_extension("noice")
-		end,
+    config = function (_, opts)
+      require'noice'.setup(opts)
+			vim.api.nvim_set_keymap("n", "<leader>.", "<cmd>:NoiceDismiss<cr>", { noremap = true })
+      vim.cmd('set cmdheight=0')
+    end
 	},
+  {
+    "sindrets/diffview.nvim"
+  }
 }

@@ -40,6 +40,12 @@ local function get_root_for_path(start_path)
 	end
 end
 
+M.string = {
+	startsWith = function(str, prefix)
+		return string.sub(str, 1, string.len(prefix)) == prefix
+	end,
+}
+
 function M.coalesce(bool, if_true, if_false)
 	if bool then
 		return if_true
@@ -85,13 +91,16 @@ function M.cwd()
 end
 
 M.path = {
+	-- Check path exists
 	exists = function(filename)
 		local stat = vim.loop.fs_stat(filename)
 		return stat ~= nil
 	end,
+
 	join = function(...)
 		return table.concat(vim.tbl_flatten({ ... }), path_separator):gsub(path_separator .. "+", path_separator)
 	end,
+
 	-- Gets worspace root
 	get_root = function()
 		local root
@@ -105,6 +114,7 @@ M.path = {
 		root = root or vim.loop.cwd()
 		return root
 	end,
+
 	-- has_file fun(patterns: ...): boolean checks if file exists
 	has_file = function(...)
 		local patterns = vim.tbl_flatten({ ... })
@@ -116,6 +126,7 @@ M.path = {
 		end
 		return false
 	end,
+
 	-- root_has_file fun(patterns: ...): boolean checks if file exists at root level
 	root_has_file = function(...)
 		local root = M.path.get_root()
@@ -127,6 +138,7 @@ M.path = {
 		end
 		return false
 	end,
+
 	-- root_has_file_matches fun(pattern: string): boolean checks if pattern matches a file at root level
 	root_has_file_matches = function(pattern)
 		local root = M.path.get_root()
@@ -143,6 +155,7 @@ M.path = {
 
 		return false
 	end,
+
 	root_matches = function(pattern)
 		local root = M.path.get_root()
 		return root:find(pattern) ~= nil
@@ -161,13 +174,13 @@ function M.error(msg, inspect)
 	require("notify")(M.coalesce(inspect, vim.inspect(msg), msg), "error")
 end
 
-function M.buf_excluded(exclude, bufnr)
+function M.buf_excluded(bufnr, fileTypes)
 	if not bufnr then
 		bufnr = vim.api.nvim_get_current_buf()
 	end
 
 	local btype = vim.api.nvim_buf_get_option(bufnr, "filetype")
-	return btype == "" or btype == nil or vim.tbl_contains(exclude, btype)
+	return btype == "" or btype == nil or vim.tbl_contains(fileTypes, btype)
 end
 
 return M

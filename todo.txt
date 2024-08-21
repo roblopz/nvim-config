@@ -1,7 +1,0 @@
--- Git integration?
--- Diagnostic lines?
--- Multiple highlights (https://github.com/echasnovski/mini.hipatterns)
--- Highlight scopes
--- DAP
--- JSON lang
--- Find in tree

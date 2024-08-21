@@ -82,12 +82,12 @@ return {
 			},
 
 			config = function(_, opts)
-				vim.api.nvim_create_autocmd("ColorScheme", {
-					pattern = "kanagawa",
-					callback = function()
-						vim.fn.system("kitty +kitten themes Kanagawa")
-					end,
-				})
+				-- vim.api.nvim_create_autocmd("ColorScheme", {
+				-- 	pattern = "kanagawa",
+				-- 	callback = function()
+				-- 		vim.fn.system("kitty +kitten themes Kanagawa")
+				-- 	end,
+				-- })
 
 				require("kanagawa").setup(opts)
 				vim.cmd("colorscheme kanagawa")

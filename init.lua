@@ -8,6 +8,7 @@ vim.opt.relativenumber = true
 vim.opt.mouse = 'a'
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
+
 -- Sync clipboard between OS and Neovim.
 --  Schedule the setting after `UiEnter` because it can increase startup-time.
 --  Remove this option if you want your OS clipboard to remain independent.
@@ -15,6 +16,7 @@ vim.opt.showmode = false
 -- vim.schedule(function()
 --   vim.opt.clipboard = 'unnamedplus'
 -- end)
+
 -- Enable break indent
 vim.opt.breakindent = true
 -- Save undo history
@@ -22,13 +24,9 @@ vim.opt.undofile = true
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
--- Keep signcolumn on by default
-vim.opt.signcolumn = 'yes'
+vim.opt.signcolumn = 'auto'
 -- Decrease update time
 vim.opt.updatetime = 250
--- Decrease mapped sequence wait time
--- Displays which-key popup sooner
-vim.opt.timeoutlen = 300
 -- Configure how new splits should be opened
 vim.opt.splitright = true
 vim.opt.splitbelow = true
@@ -43,92 +41,42 @@ vim.opt.cursorline = true
 vim.opt.scrolloff = 10
 -- hsplit to top
 vim.opt.splitbelow = false
-
-vim.schedule(function()
-  vim.opt.clipboard = 'unnamedplus'
-end)
+vim.opt.softtabstop = -1
+vim.opt.shiftwidth = 2
+vim.opt.tabstop = 8
+vim.opt.fillchars = { eob = ' ' }
 
 -- Load configs in vim format
 vim.cmd(string.format('source %s', vim.fn.stdpath 'config' .. '/config.vim'))
+
+if vim.fn.getenv 'TERM_PROGRAM' == 'ghostty' then
+  vim.opt.title = true
+  vim.opt.titlestring = "%{fnamemodify(getcwd(), ':~')} - Nvim"
+end
 
 --[[ ============================= MAPPINGS ============================== ]]
 
 -- Clear highlights on search when pressing <Esc> in normal mode
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- W and WA
-vim.keymap.set({ 'n', 'i' }, 'ã-0', '<cmd>w<CR>')
-vim.keymap.set({ 'n', 'i' }, 'ã-1', '<cmd>wa<CR>')
+vim.keymap.set({ 'n', 'i' }, 'ã-Xss', '<cmd>w<CR>')
+vim.keymap.set({ 'n', 'i' }, 'ã-Xsa', '<cmd>wa<CR>')
 -- Window moving & closing
-vim.keymap.set({ 'n' }, '<M-Right>', '<C-w>l')
-vim.keymap.set({ 'n' }, '<M-Left>', '<C-w>h')
-vim.keymap.set({ 'n' }, '<M-Up>', '<C-w>k')
-vim.keymap.set({ 'n' }, '<M-Down>', '<C-w>j')
 vim.keymap.set({ 'n' }, '<C-c>', '<Cmd>close<CR>')
+vim.keymap.set({ 'n' }, '<M-S-Right>', '<C-w>l')
+vim.keymap.set({ 'n' }, '<M-S-Left>', '<C-w>h')
+vim.keymap.set({ 'n' }, '<M-S-Up>', '<C-w>k')
+vim.keymap.set({ 'n' }, '<M-S-Down>', '<C-w>j')
 -- Enter visual
 vim.keymap.set({ 'n' }, '<S-Up>', '<S-v><Up>')
 vim.keymap.set({ 'n' }, '<S-Down>', '<S-v><Down>')
-
-local function clone_window(open_opts)
-  local bufnr = vim.api.nvim_get_current_buf()
-  local win_id = vim.api.nvim_get_current_win()
-  local is_floating = vim.api.nvim_win_get_config(win_id).relative ~= ''
-
-  local o_width = vim.api.nvim_win_get_width(win_id)
-  local o_height = vim.api.nvim_win_get_height(win_id)
-
-  if is_floating then
-    vim.api.nvim_win_set_width(win_id, 20)
-    vim.api.nvim_win_set_height(win_id, 1)
-  end
-
-  require('custom.open-window').open(
-    bufnr,
-    vim.tbl_deep_extend('force', open_opts, {
-      cb = function(res)
-        if is_floating then
-          if res.opened then
-            if not vim.wo.number then
-              vim.cmd 'set number'
-            end
-
-            if not vim.wo.relativenumber then
-              vim.cmd 'set relativenumber'
-            end
-
-            vim.api.nvim_win_close(win_id, false)
-          else
-            vim.api.nvim_win_set_width(win_id, o_width)
-            vim.api.nvim_win_set_height(win_id, o_height)
-          end
-        end
-      end,
-    })
-  )
-end
-
--- Open this window in another window
-vim.keymap.set('n', '<C-w>ov', function()
-  clone_window {
-    mode = 'split',
-    horizontal = false,
-  }
-end, { desc = 'Open this window - vsplit' })
-
-vim.keymap.set('n', '<C-w>ox', function()
-  clone_window {
-    mode = 'split',
-    horizontal = true,
-  }
-end, { desc = 'Open this window - hsplit' })
-
-vim.keymap.set('n', '<C-w>os', function()
-  clone_window {}
-end, { desc = 'Open this window - pick where' })
+-- Tabs
+vim.keymap.set({ 'n' }, '<C-w>tt', '<Cmd>tabnew<CR>')
+vim.keymap.set({ 'n' }, '<C-w>tc', '<Cmd>tabclose<CR>')
 
 --[[ ============================== LAZYVIM ============================== ]]
 
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
----@diagnostic disable-next-line: undefined-field
 if not vim.uv.fs_stat(lazypath) then
   local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
   local out = vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
@@ -137,7 +85,6 @@ if not vim.uv.fs_stat(lazypath) then
   end
 end
 
----@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
 require('lazy').setup({
@@ -157,8 +104,15 @@ require('lazy').setup({
 
       require('which-key').add {
         { 'gd', group = 'LSP [G]o' },
-        { '<leader>t', group = '[T]oggle' },
+        { '<leader>t', group = 'NeoTree [T]oggle' },
+        { '<leader>to', group = 'NeoTree Float' },
         { '<leader>f', group = '[F]ind' },
+        { '<leader>fl', group = '[L]sp' },
+        { '<leader>q', group = '[Q]uick list' },
+        { '<leader>h', group = '[H]ighlight' },
+        { '<leader>hw', group = '[H]ighlight word' },
+        { '<leader>hc', group = 'Clear [H]ighlight' },
+        { '<C-w>o', group = '[W]indow [O]pen at' },
       }
     end,
   },
@@ -193,6 +147,15 @@ require('lazy').setup({
       lazy = '💤 ',
     },
   },
+})
+
+vim.api.nvim_create_augroup('AutoAdjustResize', { clear = true })
+
+vim.api.nvim_create_autocmd('VimResized', {
+  group = 'AutoAdjustResize',
+  callback = function()
+    vim.cmd 'wincmd ='
+  end,
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`

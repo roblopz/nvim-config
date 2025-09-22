@@ -24,11 +24,14 @@ return {
     'hrsh7th/cmp-path',
     'hrsh7th/cmp-buffer',
     'hrsh7th/cmp-cmdline',
+    'hrsh7th/cmp-nvim-lsp-signature-help',
+    'cmp-under-comparator',
+    'lukas-reineke/cmp-under-comparator',
   },
   config = function()
     local cmp = require 'cmp'
     local luasnip = require 'luasnip'
-
+    local types = require 'cmp.types'
     luasnip.config.setup {}
 
     cmp.setup {
@@ -46,7 +49,6 @@ return {
         ['<CR>'] = cmp.mapping.confirm { select = true },
         ['<Tab>'] = cmp.mapping.select_next_item(),
         ['<S-Tab>'] = cmp.mapping.select_prev_item(),
-        ['<C-e>'] = cmp.mapping.abort(),
         ['<C-Space>'] = cmp.mapping.complete(),
         ['<C-p>'] = cmp.mapping.scroll_docs(-4),
         ['<C-n>'] = cmp.mapping.scroll_docs(4),
@@ -55,13 +57,30 @@ return {
       },
       sources = {
         {
-          name = 'lazydev',
-          group_index = 0,
+          name = 'nvim_lsp',
+          priority = 1000,
+          entry_filter = function(entry)
+            -- Filter text from lsp as we have the buffer source
+            local kind = types.lsp.CompletionItemKind[entry:get_kind()]
+            if kind == 'Text' then
+              return false
+            end
+            return true
+          end,
         },
-        { name = 'nvim_lsp' },
-        { name = 'luasnip' },
-        { name = 'path' },
-        { name = 'buffer' },
+        -- { name = 'nvim_lsp_signature_help', priority = 900 },
+        { name = 'path', priority = 800 },
+        { name = 'buffer', priority = 700, keyword_length = 3, max_item_count = 10 },
+        -- { name = 'luasnip', priority = 1 },
+      },
+      ---@diagnostic disable-next-line: missing-fields
+      formatting = {
+        format = function(entry, vim_item)
+          if entry.source.name == 'nvim_lsp_signature_help' and vim_item.kind == 'Text' then
+            vim_item.kind = 'Parameter' -- Change "Text" to "Parameter"
+          end
+          return vim_item
+        end,
       },
     }
 
@@ -80,5 +99,13 @@ return {
         { name = 'cmdline' },
       }),
     })
+
+    vim.keymap.set('i', '<C-e>', function()
+      if cmp.visible() then
+        cmp.close()
+      else
+        cmp.complete { reason = cmp.ContextReason.Manual }
+      end
+    end, { desc = 'Trigger cmp completion menu' })
   end,
 }

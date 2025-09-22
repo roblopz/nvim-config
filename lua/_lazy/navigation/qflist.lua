@@ -19,7 +19,7 @@ local function is_qf_preview_open(qwinid)
 end
 
 local function qflist_win_open(opts, bqf_default)
-  local open_win = require 'custom.open-window'
+  local open_win = require 'open-window'
   local pick_target_win_count = open_win.get_pick_target_win_count {
     pick_window_include_current = false,
   }
@@ -114,12 +114,17 @@ end
 
 return {
   'kevinhwang91/nvim-bqf',
+  dependencies = {
+    {
+      'junegunn/fzf',
+    },
+  },
   config = function()
     require('bqf').setup {
       -- auto_resize_height = true,
       preview = {
         win_height = 40,
-        winblend = 5,
+        winblend = 0
       },
       func_map = {
         open = '<CR>',
@@ -136,6 +141,7 @@ return {
         stoggleup = '<S-Tab>',
         filter = '<C-q>',
         filterr = '<S-q>',
+        ptogglemode = 'zp',
         openc = '', -- 'o',
         drop = '', --'O',
         split = '', --'<C-x>',
@@ -144,12 +150,11 @@ return {
         tabb = '', --'T',
         tabc = '', --'<C-t>',
         tabdrop = '', --'',
-        ptogglemode = '', --'zp',
         lastleave = '', -- [['"]],
         stogglevm = '', -- '<Tab>',
         stogglebuf = '', -- [['<Tab>]],
         sclear = '', -- 'z<Tab>',
-        fzffilter = '', -- 'zf',
+        fzffilter = 'zf', -- 'zf',
       },
     }
 
@@ -157,6 +162,47 @@ return {
     vim.keymap.set('n', '[q', '<Cmd>cprev<cr>', { desc = 'qflist prev' })
     vim.keymap.set('n', '<leader>qf', '<Cmd>copen<cr>', { desc = 'qflist focus' })
     vim.keymap.set('n', '<leader>qc', '<Cmd>cclose<cr>', { desc = 'qflist close' })
+
+    vim.keymap.set('n', '<leader>qq', function()
+      vim.cmd 'copen'
+      require('bqf.qfwin.handler').open()
+    end, { desc = 'qflist open first' })
+
+    -- Function to sort quickfix items by filename
+    local function sortQuickfixByFilename(ascending)
+      -- Get the current quickfix list
+      local quickfix_list = vim.fn.getqflist()
+
+      -- Helper function to retrieve filename from bufnr
+      local function get_filename(item)
+        if item.bufnr and item.bufnr > 0 then
+          return vim.fn.bufname(item.bufnr)
+        else
+          return '' -- Sort nil or empty filenames last
+        end
+      end
+
+      -- Sort the quickfix list by filename
+      table.sort(quickfix_list, function(a, b)
+        if ascending then
+          return get_filename(a) < get_filename(b)
+        else
+          return get_filename(a) > get_filename(b)
+        end
+      end)
+
+      -- Set the sorted quickfix list back
+      vim.fn.setqflist({}, 'r', { items = quickfix_list })
+      print 'Quickfix list sorted by filename.'
+    end
+
+    vim.keymap.set('n', '<leader>qs', function()
+      sortQuickfixByFilename(false)
+    end, { desc = 'qflist sort by filename (descending)' })
+
+    vim.keymap.set('n', '<leader>qS', function()
+      sortQuickfixByFilename(true)
+    end, { desc = 'qflist sort by filename (ascending)' })
 
     local previous_win = nil
 
@@ -183,8 +229,7 @@ return {
             silent = true,
             callback = function()
               qflist_win_open({
-                mode = 'split',
-                horizontal = false,
+                mode = 'vsplit',
               }, function()
                 require('bqf.qfwin.handler').open(false, 'vsplit')
               end)
@@ -198,7 +243,6 @@ return {
             callback = function()
               qflist_win_open({
                 mode = 'split',
-                horizontal = true,
               }, function()
                 require('bqf.qfwin.handler').open(false, 'split')
               end)
@@ -228,7 +272,7 @@ return {
           })
 
           vim.api.nvim_buf_set_keymap(0, 'n', '<Bs>', '', {
-            desc = 'Delete history entry',
+            desc = 'Go back to code window',
             noremap = true,
             silent = true,
             callback = function()
